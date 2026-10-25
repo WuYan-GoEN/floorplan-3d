@@ -9,6 +9,8 @@
   "title": "3号棟 4LDK",
   "subtitle": "土地150.04㎡ · 建物97.29㎡",
   "north": 22,                        // 正北方向：从图纸正上方顺时针的角度，用于日照
+  "ceiling": 2400,                    // 层高 mm（默认 2800；日本建売一般 2400）
+  "style": {"wall":"#efe7da","ceiling":"#f6f1e8"},   // 可选：墙 / 天花颜色，并加室内补光
   "floors": [ { ...楼层... } ]
 }
 ```
@@ -25,7 +27,7 @@
 | `voids` | 楼梯井等不铺地板的区域 `{rect}` 或 `{poly}` |
 | `dims` | 尺寸链 `[是否水平, 标注线位置, 起点, [分段...]]`，省略时自动标总长总宽 |
 | `entry` | 入户箭头 `{from:[x,y],to:[x,y],label:[x,y]}` |
-| `furniture` | `[类型,名称,cx,cy,宽,深,旋转,颜色?]`，类型见家具库 |
+| `furniture` | `[类型,名称,cx,cy,宽,深,旋转,颜色?,{额外属性}?]`，类型见家具库；另有 `pendant` 吊灯（`drop` 吊高）、`fan` 吊扇灯、`beam` 化妆梁、`curtain` 纱帘、`art` 挂画（`ah` 高、`y` 中心高、`art`/`dot` 画心色）、`cupboard` 高柜（`wood` 开放格色）、`rugmc` 中古地毯（`band` 边框色）；`island` 可加 `panel` 腰壁色。靠墙的家具注意背面要在墙面之外（墙中心线 + 半个墙厚） |
 
 openings：
 
@@ -47,5 +49,5 @@ openings：
 ```bash
 python3 tools/wall_lines.py 间取图.png x0 y0 x1 y1   # 找墙线像素位置
 python3 tools/check_plan.py plans/<id>.json 97.29     # 面积 / 帖数核对
-python3 tools/build_single.py plans/<id>.json out.html  # 生成单文件网页
+python3 tools/build_single.py plans/<id>.json [更多方案.json ...] out.html  # 生成单文件网页，多个方案可下拉切换（#<id>）
 ```

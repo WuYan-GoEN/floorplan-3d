@@ -404,8 +404,11 @@ function fetchJSONSync(url){
   return null;
 }
 const EMBED_ONLY = document.getElementById('planData')?.dataset.only === '1';   // 单文件版：只用内嵌数据
-const PLAN_INDEX = !EMBED_ONLY && location.protocol.startsWith('http') ? fetchJSONSync('plans/index.json') : null;
+// 单文件多方案版：{"index":{default,plans:[…]}, "plans":{id:户型}}，用 #<id> 切换
+const EMBED_MULTI = (() => { const el = document.getElementById('planData'); if (el?.dataset.multi !== '1') return null; try { return JSON.parse(el.textContent); } catch(e) { return null; } })();
+const PLAN_INDEX = EMBED_MULTI ? EMBED_MULTI.index : !EMBED_ONLY && location.protocol.startsWith('http') ? fetchJSONSync('plans/index.json') : null;
 const PLAN = (() => {
+  if (EMBED_MULTI){ const h = location.hash.slice(1); return EMBED_MULTI.plans[h] || EMBED_MULTI.plans[EMBED_MULTI.index.default] || Object.values(EMBED_MULTI.plans)[0]; }
   const want = EMBED_ONLY ? null : PLAN_ID_PARAM || PLAN_INDEX?.default;
   if (want && /^[\w-]+$/.test(want)){ const p = fetchJSONSync(`plans/${want}.json`); if (p) return p; }
   const el = document.getElementById('planData');
@@ -529,7 +532,7 @@ let _n = 1;
 const uid = () => 'f' + Date.now().toString(36) + (_n++);
 const F = (type,name,cx,cy,w,d,rot=0,color) => ({id:uid(),type,name,cx,cy,w,d,rot,color:color||typeColor(type)});
 
-function defaultFurniture(){ return (FLOORS[FI].furniture || []).map(a => F(...a)); }
+function defaultFurniture(){ return (FLOORS[FI].furniture || []).map(a => Object.assign(F(...a.slice(0, 8)), a[8] || {})); }
 
 function defaultState(){
   const rooms = {}; ROOMS.forEach(r => rooms[r.id] = {name:r.name, mat:r.mat});
@@ -722,12 +725,18 @@ function furnSVG(t,w,d,c){
       return s;
     }
     case 'treadmill': return rc(x,y,w,d,c,'rx="50"') + rc(x+90,y+320,w-180,d-400,'#1c1c1e','rx="25"') + rc(x,y,w,230,shade(c,1.4),'rx="40"');
+    case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
+    case 'beam': return rc(x,y,w,d,'none',DASH);
+    case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
+    case 'art': return rc(x,y,w,d,c);
+    case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
+    case 'cupboard': return rc(x,y,w,d,c||'#efe8dc') + ln(x,y+d*.5,x+w,y+d*.5,DASH);
     default: return rc(x,y,w,d,c);
   }
 }
 
 /* ======================= 渲染 ======================= */
-const NOLABEL = ['plant','floorlamp','sidetable','barstool','beanbag'];
+const NOLABEL = ['plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain'];
 function renderRooms(){
   let s = '';
   ROOMS.forEach(r => s += `<polygon class="room" data-room="${r.id}" points="${r.poly.map(p=>p.join(',')).join(' ')}" fill="url(#m-${state.rooms[r.id].mat})"/>`);
@@ -1539,7 +1548,7 @@ $('#floorSel').onclick = e => { const b = e.target.closest('[data-floor]'); if (
 if (PLAN_INDEX?.plans?.length > 1){
   $('#planWrap').hidden = false;
   $('#planSel').innerHTML = PLAN_INDEX.plans.map(p => `<option value="${esc(p.id)}"${p.id === PLAN.id ? ' selected' : ''}>${esc(p.title || p.id)}</option>`).join('');
-  $('#planSel').onchange = e => { location.search = '?plan=' + encodeURIComponent(e.target.value); };
+  $('#planSel').onchange = e => { if (EMBED_MULTI){ location.hash = e.target.value; location.reload(); } else location.search = '?plan=' + encodeURIComponent(e.target.value); };
 }
 { const b = $('.brand b'); b.textContent = b.dataset.zh = PLAN.title || '户型'; b.dataset.en = PLAN.titleEn || PLAN.title || 'Floor plan'; document.title = PLAN.title || document.title; }
 syncFloorBtns();
@@ -1566,10 +1575,11 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {CSS2DRenderer, CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
 
 const stage = $('#stage'), host = $('#view3d');
-const OX = (PLAN_BOX.x0 + PLAN_BOX.x1)/2, OY = (PLAN_BOX.y0 + PLAN_BOX.y1)/2, H = 2.8, FOV = 45;       // 户型中心放在世界原点，层高 2.8 m
+const OX = (PLAN_BOX.x0 + PLAN_BOX.x1)/2, OY = (PLAN_BOX.y0 + PLAN_BOX.y1)/2, H = (PLAN.ceiling || 2800)/1000, FOV = 45;       // 户型中心放在世界原点，层高 2.8 m
 const wx = x => (x - OX) / 1000, wz = y => (y - OY) / 1000, M = v => v / 1000;
 const SW = () => stage.clientWidth, SH = () => stage.clientHeight;
-const opt = {cut:2.8, furn:true, labels:true, night:false, hour:10, mode:'orbit'};
+document.querySelector('[data-cut="2.8"]').dataset.cut = H;
+const opt = {cut:H, furn:true, labels:true, night:false, hour:10, mode:'orbit'};
 
 let inited = false, active = false, raf = 0, anim = null, fly = null;
 let renderer, labelRenderer, scene, camera, orbit, walkCtl, hemi, sun, ground, glassMat, wallMat, capMat, frameMat;
@@ -1607,10 +1617,11 @@ function init(){
   ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({color:0xf2eee7, roughness:1}));
   ground.rotation.x = -Math.PI/2; ground.position.y = -0.015; ground.receiveShadow = true;
   scene.add(hemi, sun, sun.target, ground);
+  if (PLAN.style){ scene.userData.amb = new THREE.AmbientLight(0xfff0dc, PLAN.style.ambient ?? .55); scene.add(scene.userData.amb); }   // 室内补光，让墙和天花保持奶油色
 
   const pm = new THREE.PMREMGenerator(renderer); envTex = pm.fromScene(new RoomEnvironment(), .04).texture; pm.dispose();
   glassMat = new THREE.MeshPhysicalMaterial({color:0xcfe6ef, roughness:.05, transparent:true, opacity:.28, depthWrite:false, side:THREE.DoubleSide});
-  wallMat = mat('#f4f1eb', {roughness:.92}); capMat = mat('#34312d', {roughness:.9}); frameMat = mat('#5d6166', {roughness:.5, metalness:.4});
+  wallMat = mat(PLAN.style?.wall || '#f4f1eb', {roughness:.92}); capMat = mat('#34312d', {roughness:.9}); frameMat = mat('#5d6166', {roughness:.5, metalness:.4});
 
   archFloor = new THREE.Group(); archUp = new THREE.Group(); furnG = new THREE.Group(); labelG = new THREE.Group(); lampG = new THREE.Group();
   scene.add(archFloor, archUp, furnG, labelG, lampG);
@@ -2196,7 +2207,8 @@ function buildFurniture(f){
       fronts(cab, -w/2 + .05, .64, w - .1, .2, fz, n, 1, cm, 'bar'); fronts(cab, -w/2 + .05, .1, w - .1, .54, fz, n, 1, cm, 'bar', .56);
       cab.rotation.y = Math.PI; cab.position.z = bz + cd/2; g.add(cab);                    // 柜门朝 -z，+z 侧留出吧台挑空
       g.add(rbox(w, .05, d, stone, 0, .84, 0, .006));
-      [-1, 1].forEach(s => g.add(box(.04, .84, d, stone, s*(w/2 - .02), 0, 0)));             // 瀑布式侧板
+      if (f.panel) g.add(box(w - .08, .84, .03, mat(f.panel, {roughness:.55}), 0, 0, d/2 - .03));   // 对面厨房朝客厅一侧的腰壁
+      [-1, 1].forEach(s => g.add(box(.04, .84, d, f.panel ? mat(f.panel, {roughness:.55}) : stone, s*(w/2 - .02), 0, 0)));             // 侧板
       g.add(lathe([[0, 0], [.06, 0], [.14, .06], [.15, .07]], mat('#6b543f', {roughness:.5, side:THREE.DoubleSide}), w*.22, .89, 0, 32));
       for (let k = 0; k < 4; k++) g.add(blob(.04, .04, .04, ['#d98c4a', '#9fbf5a', '#b5463a', '#e6c14f'][k], w*.22 + Math.cos(k*1.6)*.05, .935 + (k === 3 ? .04 : 0), Math.sin(k*1.6)*.05, 14));
       vase(g, -w*.25, .89, -.05, .05, .22, '#e9e2d6', R);
@@ -2310,6 +2322,53 @@ function buildFurniture(f){
       cg.add(rbox(w*.8, .2, .08, bm, 0, -.1, 0, .02), box(w*.4, .11, .004, screenMat('#2a5d8f'), 0, -.055, .041)); g.add(cg);
       break;
     }
+    case 'pendant': {           // 中古风多头奶白玻璃吊灯，挂在天花上
+      const r = w/2, drop = f.drop ?? .6, y0 = H - drop, ch = chrome(), wd = woodM(c || '#6b4a33'), gl = glowMat('#fbf6ec', '#ffe6bd', .9), n = f.n || 6;
+      g.add(rod([0, H, 0], [0, y0, 0], .006, ch), cyl(.05, .05, .02, ch, 0, H - .02, 0, 20), blob(.045, .045, .045, wd, 0, y0, 0, 16), blob(.03, .03, .03, wd, 0, y0 - .07, 0, 12));
+      for (let k = 0; k < n; k++){
+        const a = k*Math.PI*2/n, rr = r*(k % 2 ? .78 : 1), ex = Math.cos(a)*rr, ez = Math.sin(a)*rr, ey = y0 + (k % 2 ? .02 : .08);
+        g.add(rod([0, y0, 0], [ex, ey, ez], .006, ch), blob(.1, .07, .1, gl, ex, ey - .02, ez, 20), blob(.022, .022, .022, wd, ex, ey + .07, ez, 10));
+      }
+      break;
+    }
+    case 'fan': {               // 吊扇灯（胡桃木扇叶）
+      const r = w/2, y0 = H - .32, wm = woodM(c || '#6b4a33');
+      g.add(rod([0, H, 0], [0, y0, 0], .012, mat('#e9e6e0')), cyl(.12, .12, .1, mat('#efece6', {roughness:.4}), 0, y0 - .05, 0, 28), cyl(.11, .11, .02, glowMat('#fff', '#fff3dc', .9), 0, y0 - .07, 0, 28));
+      for (let k = 0; k < 3; k++){ const b = rbox(r - .1, .012, .14, wm, (r - .1)/2 + .1, y0 - .02, 0, .006), p = new THREE.Group(); p.add(b); p.rotation.y = k*Math.PI*2/3 + .3; g.add(p); }
+      break;
+    }
+    case 'curtain': {           // 纱帘：一排有褶皱的半透明布
+      const h = H - .06, n = Math.max(4, Math.round(w/.12)), fm = mat(c || '#fbf8f2', {roughness:1, transparent:true, opacity:.45, side:THREE.DoubleSide, emissive:c || '#fbf8f2', emissiveIntensity:.25});
+      for (let i = 0; i < n; i++){ const x = -w/2 + w/n*(i + .5); g.add(box(w/n*1.08, h - .02, .012, fm, x, .02, (i % 2 ? .03 : -.03))); }
+      g.add(box(w + .1, .03, .04, mat('#d8d2c8'), 0, h, 0));
+      break;
+    }
+    case 'art': {               // 挂画：画框 + 白边 + 画心（f.art 颜色，f.y 中心高度）
+      const ah = f.ah ? M(f.ah) : w*1.25, y = (f.y ?? 1500)/1000 - ah/2, fm = woodM(c || '#3a2c22');
+      g.add(box(w, ah, .03, fm, 0, y, bz + .015), box(w - .05, ah - .05, .004, mat('#f6f1e7'), 0, y + .025, bz + .032));
+      const iw = w*.62, ih = ah*.62; g.add(box(iw, ih, .004, mat(f.art || '#c58a5a', {roughness:.9}), 0, y + (ah - ih)/2, bz + .035));
+      if (f.dot) g.add(cyl(iw*.22, iw*.22, .004, mat(f.dot, {roughness:.9}), 0, y + ah/2, bz + .037, 32).rotateX(Math.PI/2));
+      break;
+    }
+    case 'beam': {              // 天花化妆梁
+      const bh = (f.bh ?? 150)/1000; g.add(box(w, bh, d, woodM(c || '#8a6446'), 0, H - bh));
+      break;
+    }
+    case 'cupboard': {          // 奶油色高柜 + 胡桃木开放格（咖啡角）
+      const cm = mat(c || '#efe8dc', {roughness:.55}), wd = woodM(f.wood || '#6b4a33'), n = Math.max(1, Math.round(w/.45)), fz = d/2 - .02;
+      g.add(box(w, .85, d - .02, cm, 0, 0, -.01)); fronts(g, -w/2, .08, w, .77, fz, n, 2, cm, 'bar');
+      g.add(box(w, .03, d, wd, 0, .85), box(w, .5, .02, wd, 0, .88, bz + .01), box(.02, .5, d - .02, wd, -w/2 + .01, .88, -.01), box(.02, .5, d - .02, wd, w/2 - .01, .88, -.01));
+      g.add(box(.26, .32, .3, mat('#2b2b2d', {roughness:.4, metalness:.4}), -w*.25, .88, -.02), box(.2, .1, .2, '#c9c2b6', w*.2, .88, 0), cyl(.04, .035, .1, ceramic(), w*.2 - .05, .98, 0, 16));
+      g.add(box(w, .02, d, wd, 0, 1.38)); g.add(box(w, .78, d - .02, cm, 0, 1.4, -.01)); fronts(g, -w/2, 1.4, w, .78, fz, n, 1, cm, 'bar', 1.45);
+      g.add(box(w - .04, .01, .02, glowMat('#fff7e6', '#ffe9c4', .8), 0, 1.375, fz - .06));
+      break;
+    }
+    case 'rugmc': {             // 中古风地毯：奶油底 + 棕色边框 + 圆点
+      const band = f.band || '#7a5a44', add = (a, b, cc, y) => { const r = box(a, .003, b, mat(cc, {roughness:1}), 0, y); r.castShadow = false; g.add(r); };
+      add(w, d, c || '#efe6d6', .002); add(w - .2, d - .2, band, .005); add(w - .34, d - .34, lighter(band, .35), .007); add(w - .44, d - .44, c || '#efe6d6', .009);
+      for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++){ const o = cyl(.025, .025, .002, mat(band, {roughness:1}), -w/2 + .4 + (w - .8)*i/5, .011, -d/2 + .4 + (d - .8)*j/3, 10); o.castShadow = false; g.add(o); }
+      break;
+    }
     default: g.add(box(w, .8, d, c));
   }
   g.position.set(wx(f.cx), 0, wz(f.cy));
@@ -2346,7 +2405,7 @@ function buildArch(){
     if (bay){ fl.castShadow = true; archUp.add(fl); } else archFloor.add(fl);
     // 天花：法线朝下，只在室内仰视时可见
     const cg = new THREE.ShapeGeometry(shapeOf(r.poly, true)); cg.rotateX(Math.PI/2);
-    const ceil = new THREE.Mesh(cg, mat('#fbfaf7', {roughness:1})); ceil.position.y = H; ceil.visible = top >= H; archUp.add(ceil);
+    const ceil = new THREE.Mesh(cg, mat(PLAN.style?.ceiling || '#fbfaf7', PLAN.style ? {roughness:1, emissive:PLAN.style.ceiling, emissiveIntensity:.32} : {roughness:1})); ceil.position.y = H; ceil.visible = top >= H; archUp.add(ceil);
     if (r.at){
       const lamp = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .02, 32), new THREE.MeshStandardMaterial({color:'#fff', emissive:'#fff2d6', emissiveIntensity:.3}));
       lamp.position.set(wx(r.at[0]), H - .012, wz(r.at[1])); lamp.visible = top >= H; lampG.add(lamp);
@@ -2413,7 +2472,9 @@ function buildArch(){
 
 function buildFurn(){
   clearGroup(furnG);
-  state.furniture.forEach(f => furnG.add(buildFurniture(f)));
+  // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
+  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art'];
+  state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
 
@@ -2437,7 +2498,7 @@ function buildLabels(){
 // 只重建变化的部分
 function sync(force){
   if (!inited || (!active && !force)) return;
-  const a = JSON.stringify([state.rooms, state.demolished, opt.cut]), f = JSON.stringify(state.furniture), l = JSON.stringify([state.rooms, opt.cut]);
+  const a = JSON.stringify([state.rooms, state.demolished, opt.cut]), f = JSON.stringify([state.furniture, opt.cut < H - .01]), l = JSON.stringify([state.rooms, opt.cut]);
   if (force || a !== sigArch){ sigArch = a; buildArch(); }
   if (force || f !== sigFurn){ sigFurn = f; buildFurn(); }
   if (force || l !== sigLabels){ sigLabels = l; buildLabels(); }
@@ -2464,6 +2525,7 @@ function applyLight(){
   sun.color.setHSL(.09, .5 + warm*.4, .92 - warm*.12);
   sun.intensity = opt.night ? .05 : 1.4 + Math.sin(Math.PI*t)*1.6;
   hemi.intensity = opt.night ? .12 : 1.1;
+  if (scene.userData.amb) scene.userData.amb.intensity = opt.night ? .12 : (PLAN.style.ambient ?? .55);
   scene.background = new THREE.Color(opt.night ? 0x1c2130 : 0xf7f4ee);
   ground.material.color.set(opt.night ? 0x2a2e38 : 0xf2eee7);
   lampG.children.forEach(o => { if (o.isPointLight) o.intensity = opt.night ? 6 : 0; else o.material.emissiveIntensity = opt.night ? 2 : .3; });
@@ -2734,7 +2796,10 @@ function shot(){ const a = document.createElement('a'); a.download = tr('户型�
 
 function relang(){ syncWalkTexts(); if (inited) buildLabels(); }
 
-window.View3D = {enter, exit, relang, sync:force => sync(force), shot, groundAt, flyToRoom:id => active && !anim && flyToRoom(id), walking:() => active && opt.mode === 'walk'};
+window.View3D = {enter, exit, relang, sync:force => sync(force), shot,
+  // 指定机位（mm 平面坐标 + m 高度），用于出效果图
+  pose:(x, y, h, tx, ty, th, fov) => { fly = null; if (fov){ camera.fov = fov; camera.updateProjectionMatrix(); } setPose(pose(new THREE.Vector3(wx(tx), th, wz(ty)), new THREE.Vector3(wx(x), h, wz(y)))); },
+  light:o => { Object.assign(opt, o); applyLight(); }, groundAt, flyToRoom:id => active && !anim && flyToRoom(id), walking:() => active && opt.mode === 'walk'};
 </script>
 </body>
 </html>
