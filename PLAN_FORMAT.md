@@ -37,7 +37,7 @@ openings：
 ```
 
 - `hinge`：铰链在 `at` 的起点还是终点；`swing`：门扇开向哪一侧（单位向量）。
-- 地面材料 `mat`：wood 橡木 / walnut 胡桃木 / tile800 / tile600 / antislip 防滑砖 / marble / terrazzo / carpet / tatami 榻榻米。
+- 地面材料 `mat`：wood 橡木 / walnut 胡桃木 / tile800 / tile600 / antislip 防滑砖 / marble / terrazzo / carpet / tatami 榻榻米 / pale 浅色木地板 / ryukyu 琉球榻榻米（无边方块）。
 - `counted:false` 不计入使用面积（门廊、阳台）；`bay:true` 是飘窗（3D 抬高 45cm）。
 
 旧写法 `format: "rect"`（墙和门窗直接写矩形）仍然支持，见 `plans/demo.json`。
