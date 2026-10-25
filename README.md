@@ -4,6 +4,13 @@
 
 纯前端的户型装修设计工具：在 2D 平面图上摆放家具、拆改墙体、测量尺寸，一键切换到 Three.js 3D 场景，可以鸟瞰，也可以第一人称漫游。整个应用就是一个 `index.html`，无需构建，打开即用。
 
+## 多楼层 / 自定义户型（本 fork 新增）
+
+- 户型数据已从 `index.html` 拆到 `plans/*.json`，`index.html?plan=<id>` 切换物件，顶栏可切 1F / 2F。
+- 新增「墙中心线」写法：墙写中心线，门窗写在墙上，自动开洞；支持楼梯（含斜踏步）、楼梯井、矮墙栏杆、窗台高度、正北方向日照。
+- 格式说明见 [PLAN_FORMAT.md](PLAN_FORMAT.md)，从日本间取图换算的流程见 [skill/SKILL.md](skill/SKILL.md)。
+- 示例：`plans/3gou-4ldk.json`（两层 4LDK 戸建て），原版户型保留为 `plans/demo.json`。
+
 ## 功能
 
 **2D 平面布置**
@@ -70,7 +77,7 @@ python3 -m http.server 8000
 
 ## 自定义户型
 
-户型数据写在 `index.html` 里：
+（原版说明，本 fork 已改为 plans/*.json，见上文）户型数据原先写在 `index.html` 里：
 
 - `ROOMS`：房间多边形、名称、默认地面材料
 - `WALLS` / `WINS`：墙体与窗洞
