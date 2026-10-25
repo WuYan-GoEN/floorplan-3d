@@ -262,6 +262,7 @@ main.drawer-panel #fab{opacity:0;visibility:hidden}
     <div class="grp">
       <button class="btn" id="undo" title="撤销 (Ctrl+Z)" data-en-title="Undo (Ctrl+Z)" data-en="Undo">撤销</button>
       <button class="btn" id="redo" title="重做 (Ctrl+Shift+Z)" data-en-title="Redo (Ctrl+Shift+Z)" data-en="Redo">重做</button>
+      <button class="btn primary" id="saveBtn" hidden title="保存当前楼层的布置，换设备打开也能看到" data-en-title="Save this floor's layout so it opens the same on any device" data-en="Save">保存</button>
       <button class="btn danger" id="clearAll" title="清空所有家具家电（可撤销）" data-en-title="Remove all furniture and appliances (undoable)" data-en="Clear">清空布置</button>
     </div>
     <div class="grp only2d" id="layers">
@@ -569,10 +570,10 @@ const undoStack = [], redoStack = [];
 
 function save(){ try { localStorage.setItem(storeKey(), JSON.stringify(state)); } catch(e) {} }
 const snap = () => JSON.stringify(state);
-function commit(before){ undoStack.push(before); if (undoStack.length > 150) undoStack.shift(); redoStack.length = 0; save(); }
+function commit(before){ undoStack.push(before); if (undoStack.length > 150) undoStack.shift(); redoStack.length = 0; save(); touch(); }
 function mutate(fn){ const b = snap(); fn(); commit(b); renderAll(); }
-function undo(){ if (!undoStack.length) return toast(tr('没有可撤销的操作', 'Nothing to undo')); redoStack.push(snap()); state = JSON.parse(undoStack.pop()); validateSel(); save(); renderAll(); }
-function redo(){ if (!redoStack.length) return; undoStack.push(snap()); state = JSON.parse(redoStack.pop()); validateSel(); save(); renderAll(); }
+function undo(){ if (!undoStack.length) return toast(tr('没有可撤销的操作', 'Nothing to undo')); redoStack.push(snap()); state = JSON.parse(undoStack.pop()); validateSel(); save(); touch(); renderAll(); }
+function redo(){ if (!redoStack.length) return; undoStack.push(snap()); state = JSON.parse(redoStack.pop()); validateSel(); save(); touch(); renderAll(); }
 function validateSel(){ if (ui.sel?.kind==='furn' && !getF(ui.sel.id)) ui.sel = null; }
 const getF = id => state.furniture.find(f => f.id === id);
 
@@ -725,6 +726,12 @@ function furnSVG(t,w,d,c){
       return s;
     }
     case 'treadmill': return rc(x,y,w,d,c,'rx="50"') + rc(x+90,y+320,w-180,d-400,'#1c1c1e','rx="25"') + rc(x,y,w,230,shade(c,1.4),'rx="40"');
+    case 'globe': case 'drum': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,w*.15,d*.15,'#f6ecd9');
+    case 'storagebed': return rc(x,y,w,d,c) + rc(x+40,y+200,w-80,d-240,'#f6f3ee') + rc(x+40,y+d*.34,w-80,d*.62,'#efe9de') + rc(x,y,w,200,shade(c,.8));
+    case 'cattree': return rc(x,y,w,d,'#e3d4bd','rx="60"') + ec(-w*.25,-d*.25,50,50,'#c9b48e') + ec(w*.25,d*.25,50,50,'#c9b48e');
+    case 'cat': return ec(0,0,w/2*.55,d/2*.9,'#f1ebe0') + ec(0,d*.42,w*.22,w*.2,'#6e5a4b');
+    case 'litter': return rc(x,y,w,d,c||'#e7e2d8','rx="60"') + rc(x+60,y+60,w-120,d-120,'#cfc6b7','rx="50"');
+    case 'catbowl': return rc(x,y,w,d,'#d9cfc0','rx="30"') + ec(-w*.22,0,70,70,'#fff') + ec(w*.22,0,70,70,'#fff');
     case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
     case 'beam': return rc(x,y,w,d,'none',DASH);
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
@@ -736,7 +743,7 @@ function furnSVG(t,w,d,c){
 }
 
 /* ======================= 渲染 ======================= */
-const NOLABEL = ['plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain'];
+const NOLABEL = ['plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
 function renderRooms(){
   let s = '';
   ROOMS.forEach(r => s += `<polygon class="room" data-room="${r.id}" points="${r.poly.map(p=>p.join(',')).join(' ')}" fill="url(#m-${state.rooms[r.id].mat})"/>`);
@@ -1322,6 +1329,7 @@ document.addEventListener('keydown', e => {
   const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
   if (mod && k === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mod && k === 'y'){ e.preventDefault(); redo(); return; }
+  if (mod && k === 's'){ e.preventDefault(); if (cloud.db && cloud.canWrite) cloudSave(); return; }
   if (mod && k === 'd'){ e.preventDefault(); duplicateSel(); return; }
   if (mod) return;
   if (k === '[' || k === ']'){ drawer(k === '[' ? 'lib' : 'panel'); return; }
@@ -1410,7 +1418,15 @@ addEventListener('pointerup', e => endLibDrag(e, true));
 addEventListener('pointercancel', e => endLibDrag(e, false));
 
 /* ======================= 导入导出 ======================= */
-function download(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+async function download(name, blob){
+  // 发布成 Artifact 后普通下载链接无效，改走 downloads 能力（会弹确认）
+  if (window.claude?.use){
+    let dl = null; try { dl = await window.claude.use('downloads'); } catch(e) {}
+    if (dl){ try { await dl.save({filename:name, data:blob}); } catch(e){ if (e?.code && e.code !== 'declined' && e.code !== 'cancelled') toast(tr('导出失败：', 'Export failed: ') + e.code); } return; }
+  }
+  downloadLink(name, blob);
+}
+function downloadLink(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 function exportPNG(){
   if (is3D()) return window.View3D.shot();
   const clone = svg.cloneNode(true), W = 3200, H = Math.round(W*BOUNDS.h/BOUNDS.w);
@@ -1531,12 +1547,67 @@ function setLang(l){
   window.View3D?.relang();
 }
 /* ======================= 楼层 / 物件切换 ======================= */
+/* ======================= 云端保存（发布成 Artifact 时可用） ======================= */
+// 每个方案的每一层存一份：layouts/<方案>__<楼层>。本机自动存一份草稿；点「保存」才写到云端，
+// 别的设备、别的人打开时载入云端那份（本机有更新的未保存修改时保留本机的）。
+const cloud = {db:null, canWrite:true, busy:false};
+const cloudPath = () => 'layouts/' + `${PLAN.id || 'plan'}__${FLOORS[FI].id}`.replace(/[^\w-]/g, '_');
+const metaKey = () => storeKey() + '-meta';
+function getMeta(){ try { return JSON.parse(localStorage.getItem(metaKey())) || {}; } catch(e) { return {}; } }
+function setMeta(m){ try { localStorage.setItem(metaKey(), JSON.stringify(m)); } catch(e) {} }
+function touch(){ const m = getMeta(); m.dirty = true; m.ts = Date.now(); setMeta(m); syncSaveBtn(); }
+const hhmm = t => { const d = new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+function syncSaveBtn(){
+  const b = $('#saveBtn'); if (!b) return;
+  b.hidden = !(cloud.db && cloud.canWrite);
+  const m = getMeta();
+  b.textContent = (m.dirty ? '● ' : '') + tr('保存', 'Save');
+  b.title = m.cloudTs ? tr(`上次保存 ${hhmm(m.cloudTs)}`, `Last saved ${hhmm(m.cloudTs)}`) : tr('还没有保存到云端', 'Not saved yet');
+}
+async function cloudLoad(){
+  if (!cloud.db) return;
+  try {
+    const snap = await cloud.db.doc(cloudPath()).get();
+    if (!snap.exists) { syncSaveBtn(); return; }
+    const d = snap.data(), m = getMeta();
+    if (m.dirty && (m.ts || 0) > (d.ts || 0)){
+      if ((d.ts || 0) > (m.cloudTs || 0)) toast(tr(`云端有 ${hhmm(d.ts)} 的保存，本机的修改还没保存，保存会覆盖它`, `A newer cloud save exists (${hhmm(d.ts)}); saving will overwrite it`));
+      syncSaveBtn(); return;
+    }
+    const s = JSON.parse(d.state); if (!Array.isArray(s.furniture)) return;
+    state = fixState(s); ui.sel = null; undoStack.length = redoStack.length = 0; save();
+    setMeta({dirty:false, ts:d.ts, cloudTs:d.ts}); renderAll(); syncSaveBtn();
+    toast(tr(`已载入 ${hhmm(d.ts)} 保存的布置`, `Loaded the layout saved ${hhmm(d.ts)}`));
+  } catch(e) { syncSaveBtn(); }
+}
+async function cloudSave(){
+  if (!cloud.db || cloud.busy) return;
+  cloud.busy = true; $('#saveBtn').disabled = true;
+  const ts = Date.now();
+  try {
+    await cloud.db.doc(cloudPath()).set({state:JSON.stringify(state), ts, plan:PLAN.id || 'plan', floor:FLOORS[FI].id, title:PLAN.title || ''});
+    setMeta({dirty:false, ts, cloudTs:ts}); toast(tr('已保存，换设备打开也是这个布置', 'Saved — this layout now opens on any device'));
+  } catch(e){
+    if (e?.code === 'invalid_argument'){ cloud.canWrite = false; toast(tr('你只有查看权限，不能保存', 'You can view but not save this page')); }
+    else toast(tr('保存失败，请稍后再试', 'Save failed, please try again'));
+  }
+  cloud.busy = false; $('#saveBtn').disabled = false; syncSaveBtn();
+}
+$('#saveBtn').onclick = cloudSave;
+(async () => {
+  if (!window.claude?.use) return;
+  try { cloud.db = await window.claude.use('db'); } catch(e) { cloud.db = null; }
+  if (!cloud.db) return;
+  try { const u = await window.claude.use('user'); if (u && await u.can('data.write') === false) cloud.canWrite = false; } catch(e) {}
+  syncSaveBtn(); cloudLoad();
+})();
+
 function setFloor(i){
   if (i === FI || !FLOORS[i]) return;
   save(); undoStack.length = redoStack.length = 0; ui.sel = null; ui.mA = ui.mCur = null;
   useFloor(i); state = load() || defaultState();
   try { localStorage.setItem(FLOOR_KEY, FLOORS[i].id); } catch(e) {}
-  renderOpenings(); renderDims(); renderAll(); syncFloorBtns();
+  renderOpenings(); renderDims(); renderAll(); syncFloorBtns(); syncSaveBtn(); cloudLoad();
   if (is3D()) window.View3D?.sync(true);
   toast(FLOORS[i].name);
 }
@@ -1862,7 +1933,7 @@ function buildFurniture(f){
       break;
     }
     case 'sofa': case 'armchair': {
-      const fab = fabric(c), dk = fabric(darker(c, .88)), a = Math.min(.18, w*.14), n = f.type === 'armchair' ? 1 : (w > 2.2 ? 3 : 2), cw = (w - 2*a)/n, bd = Math.min(.2, d*.24), lh = .12, sd = d - bd - .02;
+      const fab = f.leather ? mat(c, {roughness:.38}) : fabric(c), dk = f.leather ? mat(darker(c, .85), {roughness:.4}) : fabric(darker(c, .88)), a = Math.min(.18, w*.14), n = f.type === 'armchair' ? 1 : (w > 2.2 ? 3 : 2), cw = (w - 2*a)/n, bd = Math.min(.2, d*.24), lh = .12, sd = d - bd - .02;
       legs(g, w, d, lh, woodM('#3a3027'), .07, .018);
       g.add(rbox(w, .16, d, dk, 0, lh, 0, .03), rbox(w, .73, bd, dk, 0, lh, bz + bd/2, .06));
       [-1, 1].forEach(s => g.add(rbox(a, .5, d, dk, s*(w/2 - a/2), lh, 0, .07)));
@@ -2369,6 +2440,61 @@ function buildFurniture(f){
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++){ const o = cyl(.025, .025, .002, mat(band, {roughness:1}), -w/2 + .4 + (w - .8)*i/5, .011, -d/2 + .4 + (d - .8)*j/3, 10); o.castShadow = false; g.add(o); }
       break;
     }
+    case 'globe': {             // 小号乳白玻璃吊灯（中岛上方）
+      const r = w/2, y = H - (f.drop ?? 750)/1000, wd = woodM(c || '#6b4a33');
+      g.add(rod([0, H, 0], [0, y + r*1.6, 0], .003, mat('#2b2b2d')), cyl(.04, .04, .015, mat('#efece6'), 0, H - .015, 0, 16));
+      g.add(cyl(r*.32, r*.45, r*.5, wd, 0, y + r*1.45, 0, 20), blob(r, r*.92, r, glowMat('#fbf6ec', '#ffe2b3', 1.0), 0, y + r*.9, 0, 24));
+      break;
+    }
+    case 'drum': {              // 褶皱布艺吸顶灯（低吊，适合 2.4m 层高）
+      const r = w/2, h = (f.h ?? 260)/1000, y = H - (f.drop ?? 300)/1000, n = 36, sh = glowMat(c || '#f3eadb', '#ffdcaa', .75);
+      g.add(rod([0, H, 0], [0, y + h, 0], .006, mat('#c9b79c', {metalness:.4, roughness:.4})));
+      for (let k = 0; k < n; k++){ const a = k*Math.PI*2/n, p = new THREE.Group(); p.add(box(2*Math.PI*r/n*1.15, h, .012, sh, 0, 0, r)); p.position.y = y; p.rotation.y = a + (k % 2 ? .12 : -.12); g.add(p); }
+      g.add(cyl(r*.98, r*.98, .006, glowMat('#fff6e6', '#ffe6bd', 1.1), 0, y + .02, 0, 36));
+      break;
+    }
+    case 'storagebed': {        // 收纳床：木床箱 + 抽屉 + 带置物格和灯的床头
+      const wm = woodM(c), hb = .2, top = .52, md = d - hb, side = f.drawers === 'left' ? -1 : 1;
+      g.add(box(w, .32, md - .02, wm, 0, .02, bz + hb + md/2));
+      const dg = new THREE.Group(); fronts(dg, -md/2 + .05, .06, md - .1, .22, w/2, 2, 1, wm, 'edge');   // 先按 +z 画，再转到床侧
+      dg.rotation.y = side*Math.PI/2; dg.position.z = bz + hb + md/2; g.add(dg);
+      g.add(rbox(w - .06, .2, md - .08, '#f6f3ee', 0, .34, bz + hb + md/2, .06));      // 床垫
+      g.add(rbox(w + .02, .14, md*.66, fabric(f.duvet || '#efe9de'), 0, .44, d/2 - md*.33 - .02, .05));
+      g.add(rbox(w*.98, .06, .5, fabric(f.throw || '#8a4a2c'), 0, .565, d/2 - .32, .02));  // 床尾毯
+      [-1, 1].forEach(s => g.add(rot(rbox(w*.42, .14, .38, fabric('#fbf8f2'), s*w*.23, top + .02, bz + hb + .3, .06), -.25)));
+      g.add(rot(rbox(w*.3, .26, .1, fabric(f.throw || '#8a4a2c'), 0, top + .06, bz + hb + .48, .05), -.3));
+      g.add(box(w, .88, hb, wm, 0, 0, bz + hb/2), box(w - .1, .02, hb - .06, glowMat('#fff3dc', '#ffd9a0', .9), 0, .86, bz + hb/2));
+      [-1, 1].forEach(s => { g.add(box(.3, .16, hb - .04, woodM(darker(c, .7)), s*(w/2 - .25), .66, bz + hb/2 + .02)); vase(g, s*(w/2 - .25), .88, bz + .1, .03, .12, '#d8cfc2', R, false); });
+      break;
+    }
+    case 'cattree': {           // 猫爬架：剑麻柱 + 三层平台 + 顶层窝
+      const sis = mat('#c9b48e', {roughness:1}), pl = woodM(c || '#d8c3a5'), cu = fabric(f.cushion || '#e9e1d3'), H2 = (f.h ?? 1500)/1000;
+      g.add(rbox(w, .05, d, pl, 0, 0, 0, .01));
+      [[-w*.25, -d*.25], [w*.25, d*.25]].forEach(([x, z]) => g.add(cyl(.05, .05, H2 - .05, sis, x, .05, z, 16)));
+      [[.45, w*.6, -1], [.95, w*.55, 1], [H2 - .02, w*.8, 0]].forEach(([y, s, o]) => g.add(rbox(s, .04, s*.8, pl, o*w*.15, y, -o*d*.1, .01)));
+      g.add(cyl(w*.33, w*.36, .1, cu, 0, H2 + .02, 0, 24));
+      break;
+    }
+    case 'cat': {               // 布偶猫（趴着），y = 所在高度 mm
+      const y = (f.y ?? 0)/1000, fur = fabric('#f1ebe0'), pt = fabric('#6e5a4b'), L = Math.max(w, d)/2;
+      g.add(blob(L*.55, L*.32, L*.85, fur, 0, y + L*.3, 0, 20), blob(L*.38, L*.34, L*.36, fur, 0, y + L*.42, L*.85, 18));
+      g.add(blob(L*.22, L*.2, L*.2, pt, 0, y + L*.4, L*1.08, 14));                       // 脸部重点色
+      [-1, 1].forEach(s => g.add(rot(cyl(0, L*.12, L*.22, pt, s*L*.2, y + L*.66, L*.86, 10), 0, 0, s*-.3)));
+      g.add(rot(blob(L*.16, L*.14, L*.6, pt, L*.42, y + L*.18, -L*.55, 14), 0, .5, 0));
+      break;
+    }
+    case 'litter': {            // 带罩大号猫砂盆
+      const bm = mat(c || '#e7e2d8', {roughness:.5}), hm = mat(f.hood || '#cfc6b7', {roughness:.5}), h = (f.h ?? 480)/1000;
+      g.add(rbox(w, h*.4, d, bm, 0, 0, 0, .03), rbox(w - .02, h*.62, d - .02, hm, 0, h*.38, 0, .08));
+      g.add(cyl(h*.2, h*.2, .02, mat('#2b2622'), 0, h*.45, d/2 - .005, 24).rotateX(Math.PI/2));
+      g.add(box(w + .2, .006, .45, fabric('#b7ab98'), 0, 0, d/2 + .22));                // 防带砂垫
+      break;
+    }
+    case 'catbowl': {
+      g.add(rbox(w, .008, d, mat('#d9cfc0', {roughness:.9}), 0, 0, 0, .02));
+      [-1, 1].forEach(s => g.add(lathe([[0, 0], [.06, 0], [.075, .06], [.07, .065]], ceramic({side:THREE.DoubleSide}), s*w*.22, .008, 0, 24), cyl(.055, .055, .004, s < 0 ? '#c9a27a' : '#bcd6e2', s*w*.22, .05, 0, 20)));
+      break;
+    }
     default: g.add(box(w, .8, d, c));
   }
   g.position.set(wx(f.cx), 0, wz(f.cy));
@@ -2473,7 +2599,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art'];
+  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art', 'globe', 'drum'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
@@ -2792,7 +2918,7 @@ function loop(){
   labelRenderer.render(scene, camera);
 }
 
-function shot(){ const a = document.createElement('a'); a.download = tr('户型装修方案', 'floor-plan-design') + '-3D.png'; a.href = renderer.domElement.toDataURL('image/png'); a.click(); }
+function shot(){ renderer.render(scene, camera); renderer.domElement.toBlob(b => download(tr('户型装修方案', 'floor-plan-design') + '-3D.png', b), 'image/png'); }
 
 function relang(){ syncWalkTexts(); if (inited) buildLabels(); }
 

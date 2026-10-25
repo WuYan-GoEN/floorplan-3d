@@ -27,7 +27,7 @@
 | `voids` | 楼梯井等不铺地板的区域 `{rect}` 或 `{poly}` |
 | `dims` | 尺寸链 `[是否水平, 标注线位置, 起点, [分段...]]`，省略时自动标总长总宽 |
 | `entry` | 入户箭头 `{from:[x,y],to:[x,y],label:[x,y]}` |
-| `furniture` | `[类型,名称,cx,cy,宽,深,旋转,颜色?,{额外属性}?]`，类型见家具库；另有 `pendant` 吊灯（`drop` 吊高）、`fan` 吊扇灯、`beam` 化妆梁、`curtain` 纱帘、`art` 挂画（`ah` 高、`y` 中心高、`art`/`dot` 画心色）、`cupboard` 高柜（`wood` 开放格色）、`rugmc` 中古地毯（`band` 边框色）；`island` 可加 `panel` 腰壁色。靠墙的家具注意背面要在墙面之外（墙中心线 + 半个墙厚） |
+| `furniture` | `[类型,名称,cx,cy,宽,深,旋转,颜色?,{额外属性}?]`，类型见家具库；另有 `pendant` 吊灯（`drop` 吊高）、`fan` 吊扇灯、`beam` 化妆梁、`curtain` 纱帘、`art` 挂画（`ah` 高、`y` 中心高、`art`/`dot` 画心色）、`cupboard` 高柜（`wood` 开放格色）、`rugmc` 中古地毯（`band` 边框色）；`globe` 小吊灯（`drop`）、`drum` 布艺吸顶灯、`storagebed` 收纳床（`drawers`:left/right、`throw` 床尾毯色）、`cattree` 猫爬架、`cat` 布偶猫（`y` 高度）、`litter` 带罩猫砂盆、`catbowl` 猫碗；`sofa`/`armchair` 可加 `leather:true`；`island` 可加 `panel` 腰壁色。靠墙的家具注意背面要在墙面之外（墙中心线 + 半个墙厚） |
 
 openings：
 
@@ -51,3 +51,9 @@ python3 tools/wall_lines.py 间取图.png x0 y0 x1 y1   # 找墙线像素位置
 python3 tools/check_plan.py plans/<id>.json 97.29     # 面积 / 帖数核对
 python3 tools/build_single.py plans/<id>.json [更多方案.json ...] out.html  # 生成单文件网页，多个方案可下拉切换（#<id>）
 ```
+
+## 保存（发布成 Artifact 时）
+
+页面声明 `db` + `user` + `downloads` 能力后，顶栏出现「保存」按钮（Ctrl/⌘+S）：当前方案当前楼层的布置存到
+`layouts/<方案id>__<楼层id>`，换设备或别人打开时载入；本机有更新且未保存的修改时保留本机的。
+导出图片 / JSON 走 `downloads` 能力（会弹确认）。本地直接打开时没有这些能力，按钮不显示，照常用浏览器本地存储。
