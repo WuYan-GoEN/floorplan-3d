@@ -378,7 +378,7 @@ const NAMES_EN = {
   '洗衣机':'Washer', '洗衣池':'Laundry Sink', '电热水器':'Water Heater', '储物柜':'Storage Cabinet', '65 寸电视':'65" TV',
   '55 寸电视':'55" TV', '对开门冰箱':'French-door Fridge', '柜机空调':'Floor AC', '挂机空调':'Wall AC', '洗碗机':'Dishwasher',
   '蒸烤箱高柜':'Oven Tower', '烘干机':'Dryer', '空气净化器':'Air Purifier', '长书桌':'Long Desk', '办公椅':'Office Chair',
-  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
+  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
 };
 const nm = s => LANG === 'en' ? (NAMES_EN[s] ?? s) : LANG === 'zht' ? s2t(s) : s;
 // 静态文案：元素上写 data-en / data-en-title，中文原文首次切换时存进 dataset
@@ -525,7 +525,12 @@ const LIB = [
     ['ovencol','蒸烤箱高柜',600,600,'#efe6d8'],['dryer','烘干机',600,600,'#e6ebee'],['purifier','空气净化器',400,300,'#f4f4f2']]},
   {cat:'书房 · 休闲', items:[
     ['desk','长书桌',1600,700,'#d8c2a2'],['officechair','办公椅',620,620,'#4a4f55'],['bookshelf','大书架',1600,350,'#e2cfb4'],
-    ['piano','立式钢琴',1500,600,'#1f1d1b'],['treadmill','跑步机',800,1800,'#3a3a3c'],['armchair','阅读椅',750,800,'#c9a98a']]},
+    ['piano','立式钢琴',1500,600,'#1f1d1b'],['treadmill','跑步机',800,1800,'#3a3a3c'],['armchair','阅读椅',750,800,'#c9a98a'],
+    ['massage','按摩椅',750,1250,'#9a6a45'],['tvcart','移动电视架',1450,600,'#e9e4da']]},
+  {cat:'灯具', items:[
+    ['drum','布艺吸顶灯',600,600,'#f3eadb'],['pendant','中古吊灯',900,900,'#6b4a33'],['globe','小吊灯',220,220,'#6b4a33']]},
+  {cat:'宠物', items:[
+    ['litter','大号猫砂盆',600,500,'#e7e2d8'],['catbowl','猫碗',500,300,'#d9cfc0'],['cattree','猫爬架',600,600,'#d8c3a5']]},
 ];
 const typeColor = t => { for (const c of LIB) for (const i of c.items) if (i[0]===t) return i[4]; return '#eee'; };
 
@@ -726,6 +731,8 @@ function furnSVG(t,w,d,c){
       return s;
     }
     case 'treadmill': return rc(x,y,w,d,c,'rx="50"') + rc(x+90,y+320,w-180,d-400,'#1c1c1e','rx="25"') + rc(x,y,w,230,shade(c,1.4),'rx="40"');
+    case 'tvcart': return rc(-w*.31,y,w*.62,d,'#e9e4da','rx="40"') + rc(x,-d*.1,w,40,'#18181a');
+    case 'massage': return rc(x,y,w,d,c||'#9a6a45','rx="120"') + rc(x+w*.2,y+60,w*.6,d*.35,shade(c||'#9a6a45',.8),'rx="80"');
     case 'globe': case 'drum': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,w*.15,d*.15,'#f6ecd9');
     case 'storagebed': return rc(x,y,w,d,c) + rc(x+40,y+200,w-80,d-240,'#f6f3ee') + rc(x+40,y+d*.34,w-80,d*.62,'#efe9de') + rc(x,y,w,200,shade(c,.8));
     case 'cattree': return rc(x,y,w,d,'#e3d4bd','rx="60"') + ec(-w*.25,-d*.25,50,50,'#c9b48e') + ec(w*.25,d*.25,50,50,'#c9b48e');
@@ -1917,7 +1924,7 @@ function buildFurniture(f){
   const g = new THREE.Group(), w = M(f.w), d = M(f.d), c = f.color || '#ddd', bz = -d/2, R = rng(Math.round(f.w*7 + f.d*13 + f.cx + f.cy));
   switch (f.type){
     case 'bed': {
-      const fr = woodM('#8d7258'), fab = fabric(c), fh = .3, mt = .22, top = fh + mt, n = Math.max(3, Math.round(w/.28)), sw = (w - .04)/n;
+      const fr = woodM(f.frame || '#8d7258'), fab = fabric(c), fh = .3, mt = .22, top = fh + mt, n = Math.max(3, Math.round(w/.28)), sw = (w - .04)/n;
       g.add(box(w - .12, .06, d - .14, '#4a3e33', 0, 0, .03), rbox(w, fh - .06, d - .08, fr, 0, .06, .04, .015));        // 内缩踢脚 + 床箱
       g.add(rbox(w, 1.08, .06, fr, 0, 0, bz + .03, .012));                                                                 // 床头板
       for (let i = 0; i < n; i++) g.add(rbox(sw - .006, .62, .06, fabric(darker(c, .8)), -w/2 + .02 + sw*(i + .5), .42, bz + .08, .025));   // 竖向软包
@@ -2033,7 +2040,7 @@ function buildFurniture(f){
       break;
     }
     case 'chair': {
-      const lw = woodM('#6b543f'), fab = fabric(c), sy = .44;
+      const lw = woodM(f.frame || '#6b543f'), fab = fabric(c), sy = .44;
       [[-1, 1], [1, 1]].forEach(([s]) => g.add(rod([s*(w/2 - .04), 0, d/2 - .05], [s*(w/2 - .05), sy, d/2 - .07], .012, lw, .018)));
       [-1, 1].forEach(s => g.add(rod([s*(w/2 - .04), 0, bz + .03], [s*(w/2 - .05), .86, bz + .07], .012, lw, .018)));
       g.add(box(w - .08, .025, .02, lw, 0, .15, d/2 - .06), box(w - .08, .025, .02, lw, 0, .15, bz + .05));
@@ -2071,7 +2078,7 @@ function buildFurniture(f){
       g.add(rbox(w*.8, .04, .3, fabric(darker(c, .7)), 0, .53, d*.12, .02), rbox(.28, .015, .2, woodM('#8d7258'), 0, .53, -d*.15, .006), cyl(.035, .03, .06, ceramic(), 0, .545, -d*.15, 20));
       break;
     case 'coffeetable': {
-      const tm = mat(c, {roughness:.35}), lw = woodM('#3a3027');
+      const tm = mat(c, {roughness:.35}), lw = woodM(f.frame || '#3a3027');
       [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => g.add(rod([a*(w/2 - .05), 0, b*(d/2 - .05)], [a*(w/2 - .07), .365, b*(d/2 - .07)], .012, lw, .02)));
       g.add(rbox(w, .035, d, tm, 0, .365, 0, .015), rbox(w - .12, .02, d - .12, woodM(darker(c, .85)), 0, .12, 0, .006));
       g.add(box(.3, .03, .22, '#2f5d62', w*.2, .14, 0), box(.26, .025, .19, '#d9b36c', w*.2, .17, .01));
@@ -2110,7 +2117,7 @@ function buildFurniture(f){
       break;
     }
     case 'table': {
-      const tm = mat(c, {roughness:.4}), lw = woodM(darker(c, .55)), ns = Math.max(1, Math.round(w/.62)), top = .75;
+      const tm = mat(c, {roughness:.4}), lw = woodM(f.frame || darker(c, .55)), ns = Math.max(1, Math.round(w/.62)), top = .75;
       [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => g.add(rod([a*(w/2 - .08), 0, b*(d/2 - .08)], [a*(w/2 - .1), .715, b*(d/2 - .1)], .016, lw, .026)));
       g.add(rbox(w, .035, d, tm, 0, .715, 0, .012), box(w - .22, .07, d - .22, lw, 0, .645));
       g.add(box(w*.7, .003, .32, fabric('#b9a58c'), 0, top, 0));
@@ -2438,6 +2445,24 @@ function buildFurniture(f){
       const band = f.band || '#7a5a44', add = (a, b, cc, y) => { const r = box(a, .003, b, mat(cc, {roughness:1}), 0, y); r.castShadow = false; g.add(r); };
       add(w, d, c || '#efe6d6', .002); add(w - .2, d - .2, band, .005); add(w - .34, d - .34, lighter(band, .35), .007); add(w - .44, d - .44, c || '#efe6d6', .009);
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++){ const o = cyl(.025, .025, .002, mat(band, {roughness:1}), -w/2 + .4 + (w - .8)*i/5, .011, -d/2 + .4 + (d - .8)*j/3, 10); o.castShadow = false; g.add(o); }
+      break;
+    }
+    case 'tvcart': {            // 可移动电视架：带脚轮底座 + 立柱 + 电视（屏幕朝 +z）
+      const tvw = M(f.tv ?? 1450), th = tvw*.5625, yc = (f.y ?? 1100)/1000, bm = mat(f.base || '#e9e4da', {roughness:.5}), pm = mat('#d9d4cb', {metalness:.3, roughness:.4});
+      g.add(rbox(w*.62, .05, d, bm, 0, .06, 0, .02));
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => g.add(cyl(.025, .025, .05, '#3a3a3c', a*(w*.31 - .05), .005, b*(d/2 - .05), 12)));
+      g.add(box(.08, yc + th/2 - .1, .05, pm, 0, .11, -d*.1), rbox(w*.5, .02, d*.6, woodM(f.wood || '#b88a5e'), 0, .45, .02, .006));
+      g.add(rbox(tvw, th, .025, mat('#18181a', {roughness:.4, metalness:.3}), 0, yc - th/2, -d*.1 + .05, .004), box(tvw - .016, th - .022, .002, screenMat('#1f2b3a'), 0, yc - th/2 + .011, -d*.1 + .064));
+      break;
+    }
+    case 'massage': {           // 按摩椅（面朝 +z），可躺
+      const cm = mat(c || '#9a6a45', {roughness:.45}), dk = mat(darker(c || '#9a6a45', .7), {roughness:.5}), aw = Math.min(.2, w*.26), iw = w - 2*aw;
+      g.add(rbox(w*.9, .14, d*.7, dk, 0, 0, -d*.05, .04));
+      [-1, 1].forEach(s => g.add(rbox(aw, .62, d*.62, cm, s*(w/2 - aw/2), .1, -d*.06, .09)));
+      g.add(rbox(iw, .16, d*.48, cm, 0, .36, -d*.02, .06));
+      g.add(rot(rbox(iw + .04, 1.0, .26, cm, 0, .4, bz + .22, .1), -.32));
+      g.add(rot(rbox(iw - .02, .5, .16, dk, 0, .08, d/2 - .2, .06), .55));
+      g.add(rbox(iw*.7, .12, .14, mat('#efe6d6', {roughness:.6}), 0, 1.18, bz + .02, .05));
       break;
     }
     case 'globe': {             // 小号乳白玻璃吊灯（中岛上方）
