@@ -2117,9 +2117,9 @@ function buildFurniture(f){
       break;
     }
     case 'table': {
-      const tm = mat(c, {roughness:.4}), lw = woodM(f.frame || darker(c, .55)), ns = Math.max(1, Math.round(w/.62)), top = .75;
-      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => g.add(rod([a*(w/2 - .08), 0, b*(d/2 - .08)], [a*(w/2 - .1), .715, b*(d/2 - .1)], .016, lw, .026)));
-      g.add(rbox(w, .035, d, tm, 0, .715, 0, .012), box(w - .22, .07, d - .22, lw, 0, .645));
+      const tm = mat(c, {roughness:.4}), lw = woodM(f.frame || darker(c, .55)), ns = Math.max(1, Math.round(w/.62)), top = (f.h ?? 750)/1000, T = top;
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a, b]) => g.add(rod([a*(w/2 - .08), 0, b*(d/2 - .08)], [a*(w/2 - .1), (T - .035), b*(d/2 - .1)], .016, lw, .026)));
+      g.add(rbox(w, .035, d, tm, 0, (T - .035), 0, .012), box(w - .22, .07, d - .22, lw, 0, (T - .105)));
       g.add(box(w*.7, .003, .32, fabric('#b9a58c'), 0, top, 0));
       for (let i = 0; i < ns; i++) [-1, 1].forEach(s => {
         const x = -w/2 + w/ns*(i + .5), z = s*(d/2 - .17);
