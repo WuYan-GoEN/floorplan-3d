@@ -378,7 +378,7 @@ const NAMES_EN = {
   '洗衣机':'Washer', '洗衣池':'Laundry Sink', '电热水器':'Water Heater', '储物柜':'Storage Cabinet', '65 寸电视':'65" TV',
   '55 寸电视':'55" TV', '对开门冰箱':'French-door Fridge', '柜机空调':'Floor AC', '挂机空调':'Wall AC', '洗碗机':'Dishwasher',
   '蒸烤箱高柜':'Oven Tower', '烘干机':'Dryer', '空气净化器':'Air Purifier', '长书桌':'Long Desk', '办公椅':'Office Chair',
-  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
+  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '中古 L 形沙发':'Mid-century L Sofa', 'Y 形椅':'Wishbone Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
 };
 const nm = s => LANG === 'en' ? (NAMES_EN[s] ?? s) : LANG === 'zht' ? s2t(s) : s;
 // 静态文案：元素上写 data-en / data-en-title，中文原文首次切换时存进 dataset
@@ -526,7 +526,7 @@ const LIB = [
   {cat:'书房 · 休闲', items:[
     ['desk','长书桌',1600,700,'#d8c2a2'],['officechair','办公椅',620,620,'#4a4f55'],['bookshelf','大书架',1600,350,'#e2cfb4'],
     ['piano','立式钢琴',1500,600,'#1f1d1b'],['treadmill','跑步机',800,1800,'#3a3a3c'],['armchair','阅读椅',750,800,'#c9a98a'],
-    ['massage','按摩椅',750,1250,'#9a6a45'],['tvcart','移动电视架',1450,600,'#e9e4da']]},
+    ['massage','按摩椅',750,1250,'#9a6a45'],['lsofa','中古 L 形沙发',2000,1500,'#c4a682'],['ychair','Y 形椅',550,520,'#d9c9ad'],['tvcart','移动电视架',1450,600,'#e9e4da']]},
   {cat:'灯具', items:[
     ['drum','布艺吸顶灯',600,600,'#f3eadb'],['pendant','中古吊灯',900,900,'#6b4a33'],['globe','小吊灯',220,220,'#6b4a33']]},
   {cat:'宠物', items:[
@@ -731,6 +731,11 @@ function furnSVG(t,w,d,c){
       return s;
     }
     case 'treadmill': return rc(x,y,w,d,c,'rx="50"') + rc(x+90,y+320,w-180,d-400,'#1c1c1e','rx="25"') + rc(x,y,w,230,shade(c,1.4),'rx="40"');
+    case 'lsofa': { const k = Math.min(800, d*.55, w*.42); return `<path d="M${x} ${y}H${x+w}V${y+k}H${x+k}V${y+d}H${x}Z" fill="${c||'#cdbfa8'}" ${ST}/>` + rc(x+20,y+20,w-40,180,shade(c||'#cdbfa8',.85)) + rc(x+20,y+20,180,d-40,shade(c||'#cdbfa8',.85)); }
+    case 'ychair': return rc(x+30,y+40,w-60,d-70,c||'#d9c9ad','rx="40"') + pa(`M${x+30} ${y+60}Q0 ${y-60} ${x+w-30} ${y+60}`,'none','stroke-width="3"');
+    case 'ovaltable': return rc(x,y,w,d,c||'#b88a5e',`rx="${d/2}"`);
+    case 'lsofa': return rc(x,y,w,Math.min(820,d*.6),c) + rc(x,y,Math.min(820,d*.6),d,c) + rc(x+w-50,y,50,Math.min(820,d*.6),'#b88a5e');
+    case 'ychair': return rc(x+30,y+60,w-60,d-90,c||'#d9c9ad','rx="40"') + pa(`M${x+40} ${y+90} Q0 ${y-60} ${-x-40} ${y+90}`,'none');
     case 'tvcart': return rc(-w*.31,y,w*.62,d,'#e9e4da','rx="40"') + rc(x,-d*.1,w,40,'#18181a');
     case 'massage': return rc(x,y,w,d,c||'#9a6a45','rx="120"') + rc(x+w*.2,y+60,w*.6,d*.35,shade(c||'#9a6a45',.8),'rx="80"');
     case 'globe': case 'drum': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,w*.15,d*.15,'#f6ecd9');
@@ -2401,7 +2406,7 @@ function buildFurniture(f){
       break;
     }
     case 'pendant': {           // 中古风多头奶白玻璃吊灯，挂在天花上
-      const r = w/2, drop = f.drop ?? .6, y0 = H - drop, ch = chrome(), wd = woodM(c || '#6b4a33'), gl = glowMat('#fbf6ec', '#ffe6bd', .9), n = f.n || 6;
+      const r = w/2, drop = (f.drop ?? 600)/1000, y0 = H - drop, ch = chrome(), wd = woodM(c || '#6b4a33'), gl = glowMat('#fbf6ec', '#ffe6bd', .9), n = f.n || 6;
       g.add(rod([0, H, 0], [0, y0, 0], .006, ch), cyl(.05, .05, .02, ch, 0, H - .02, 0, 20), blob(.045, .045, .045, wd, 0, y0, 0, 16), blob(.03, .03, .03, wd, 0, y0 - .07, 0, 12));
       for (let k = 0; k < n; k++){
         const a = k*Math.PI*2/n, rr = r*(k % 2 ? .78 : 1), ex = Math.cos(a)*rr, ez = Math.sin(a)*rr, ey = y0 + (k % 2 ? .02 : .08);
@@ -2445,6 +2450,87 @@ function buildFurniture(f){
       const band = f.band || '#7a5a44', add = (a, b, cc, y) => { const r = box(a, .003, b, mat(cc, {roughness:1}), 0, y); r.castShadow = false; g.add(r); };
       add(w, d, c || '#efe6d6', .002); add(w - .2, d - .2, band, .005); add(w - .34, d - .34, lighter(band, .35), .007); add(w - .44, d - .44, c || '#efe6d6', .009);
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++){ const o = cyl(.025, .025, .002, mat(band, {roughness:1}), -w/2 + .4 + (w - .8)*i/5, .011, -d/2 + .4 + (d - .8)*j/3, 10); o.castShadow = false; g.add(o); }
+      break;
+    }
+    case 'lsofa': {             // 木框 L 形沙发（沙发餐桌用）：转角在 (-x,-z)，长边沿 x，短边沿 +z
+      const k = Math.min(.8, d*.55, w*.42), fab = fabric(c || '#cdbfa8'), dk = fabric(darker(c || '#cdbfa8', .9)), wd = woodM(f.frame || '#b88a5e');
+      const lg = .1, by = lg, bh = .16, sy = by + bh, sh = .15, back = .2;
+      // 木框底座 + 斜腿
+      const base = (x0, z0, x1, z1) => { g.add(rbox(x1 - x0, .06, z1 - z0, wd, (x0 + x1)/2, lg - .02, (z0 + z1)/2, .01)); };
+      base(-w/2, bz, w/2, bz + k); base(-w/2, bz + k, -w/2 + k, d/2);
+      [[-w/2 + .06, bz + .06], [w/2 - .06, bz + .06], [w/2 - .06, bz + k - .06], [-w/2 + .06, d/2 - .06], [-w/2 + k - .06, d/2 - .06], [-w/2 + k - .06, bz + k - .06], [0, bz + k - .06]]
+        .forEach(([x, z]) => g.add(rod([x*1.0 + Math.sign(x)*.015, 0, z + Math.sign(z)*.012], [x, lg, z], .013, wd, .02)));
+      // 软包底座
+      g.add(rbox(w, bh, k, dk, 0, by, bz + k/2, .03), rbox(k, bh, d - k, dk, -w/2 + k/2, by, bz + k + (d - k)/2, .03));
+      // 靠背框（低）
+      g.add(rbox(w, .36, back, dk, 0, sy, bz + back/2, .05), rbox(back, .36, d, dk, -w/2 + back/2, sy, 0, .05));
+      // 坐垫（分块）
+      const n1 = Math.max(2, Math.round((w - k)/.62)), cw1 = (w - back)/n1;
+      for (let i = 0; i < n1; i++) g.add(rbox(cw1 - .012, sh, k - back - .01, fab, -w/2 + back + cw1*(i + .5), sy, bz + back + (k - back)/2, .06));
+      const n2 = Math.max(1, Math.round((d - k)/.62)), cw2 = (d - k)/n2;
+      for (let i = 0; i < n2; i++) g.add(rbox(k - back - .01, sh, cw2 - .012, fab, -w/2 + back + (k - back)/2, sy, bz + k + cw2*(i + .5), .06));
+      // 靠背软垫（圆润，略后仰）
+      const bc = Math.max(2, Math.round((w - back)/.6)), bw = (w - back)/bc;
+      for (let i = 0; i < bc; i++) g.add(rot(rbox(bw - .03, .4, .16, fab, -w/2 + back + bw*(i + .5), sy + sh - .02, bz + back + .06, .08), -.18));
+      const bc2 = Math.max(1, Math.round((d - back)/.6)), bw2 = (d - back)/bc2;
+      for (let i = 0; i < bc2; i++) g.add(rot(rbox(.16, .4, bw2 - .03, fab, -w/2 + back + .06, sy + sh - .02, bz + back + bw2*(i + .5), .08), 0, 0, .18));
+      // 开口端扶手（软包 + 木顶）
+      [[w/2 - .07, bz + k/2, .14, k], [-w/2 + k/2, d/2 - .07, k, .14]].forEach(([x, z, aw, ad]) => {
+        g.add(rbox(aw, .42, ad, dk, x, sy - .02, z, .06), rbox(aw + .02, .025, ad + .02, wd, x, sy + .4, z, .01));
+      });
+      // 抱枕
+      [['#b5653a', -w/2 + back + .35, bz + back + .2, .2], ['#efe6d6', -w/2 + back + .25, d/2 - .45, -.4], ['#8a6446', w/2 - .5, bz + back + .2, -.15]]
+        .forEach(([cc, x, z, a]) => g.add(rot(rbox(.42, .4, .13, fabric(cc), x, sy + sh, z, .07), -.3, a)));
+      break;
+    }
+    case 'ychair': {            // 叉骨椅风格：弯曲顶环 + Y 形背板 + 纸绳编织座面
+      const wd = woodM(f.frame || '#b88a5e'), cord = mat(c || '#d9c9ad', {roughness:1}), sy = .43, r = w/2 - .03;
+      [[-1, 1], [1, 1]].forEach(([s]) => g.add(rod([s*(w/2 - .05), 0, d/2 - .06], [s*(w/2 - .06), sy, d/2 - .07], .014, wd, .02)));
+      [-1, 1].forEach(s => g.add(rod([s*(w/2 - .06), 0, bz + .05], [s*(w/2 - .09), .7, bz + .08], .014, wd, .022)));
+      g.add(rbox(w - .08, .035, d - .1, wd, 0, sy - .035, 0, .01), rbox(w - .1, .02, d - .12, cord, 0, sy, 0, .008));
+      for (let i = 0; i < 9; i++) g.add(box(w - .11, .004, .006, mat(darker(c || '#d9c9ad', .8)), 0, sy + .021, -d/2 + .08 + i*(d - .16)/8));
+      const rail = mesh(new THREE.TorusGeometry(r, .016, 10, 48, Math.PI*1.2), wd); rail.rotation.set(Math.PI/2, 0, -Math.PI*.1 - Math.PI/2); rail.position.set(0, .7, bz + r*.9); g.add(rail);
+      g.add(rod([-.03, sy, bz + .09], [-.06, .69, bz + .06], .01, wd), rod([.03, sy, bz + .09], [.06, .69, bz + .06], .01, wd));
+      g.add(rot(rbox(.07, .2, .015, wd, 0, .48, bz + .09, .006), -.1));
+      [-1, 1].forEach(s => g.add(box(.012, .012, d - .14, wd, s*(w/2 - .055), .16, 0)));
+      break;
+    }
+    case 'ovaltable': {         // 椭圆跑道形桌面 + 外撇斜腿
+      const T = (f.h ?? 720)/1000, wd = woodM(c || '#b88a5e'), geo = new THREE.ExtrudeGeometry(rrect(w, d, d/2 - .002), {depth:.03, bevelEnabled:true, bevelThickness:.004, bevelSize:.004, bevelSegments:2, curveSegments:24});
+      geo.rotateX(-Math.PI/2); const top = mesh(geo, wd); top.position.y = T - .034; g.add(top);
+      g.add(rbox(w - d*.6, .05, d*.5, woodM(darker(c || '#b88a5e', .9)), 0, T - .085, 0, .01));
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(rod([a*(w/2 - d*.28), 0, b*(d/2 - .1)], [a*(w/2 - d*.38), T - .085, b*(d/2 - .17)], .014, wd, .024)));
+      g.add(box(w*.55, .003, .32, fabric('#c9b79c'), 0, T, 0));
+      [-1, 1].forEach(s => { g.add(box(.36, .003, .26, fabric('#efe6d6'), s*w*.22, T, d*.12)); plate(g, .11, s*w*.22, T + .003, d*.12); });
+      vase(g, 0, T + .003, -.05, .055, .2, '#e9e2d6', R);
+      break;
+    }
+    case 'lsofa': {             // 中古风 L 形沙发：木框底座 + 锥形木腿 + 细木扶手 + 拉扣坐垫 / 靠垫（转角在 -x,-z）
+      const k = Math.min(.82, d*.6, w*.42), wd = woodM(f.frame || '#b88a5e'), fab = fabric(c), fab2 = fabric(darker(c, .92)), lh = .16, bh = .07, sy = lh + bh, sh = .15, back = .62;
+      const legsAt = pts => pts.forEach(([x, z]) => g.add(rod([x, 0, z], [x, lh, z], .014, wd, .022)));
+      legsAt([[-w/2 + .06, bz + .06], [w/2 - .06, bz + .06], [w/2 - .06, bz + k - .06], [-w/2 + .06, d/2 - .06], [-w/2 + k - .06, d/2 - .06], [-w/2 + k - .06, bz + k - .06]]);
+      g.add(rbox(w, bh, k, wd, 0, lh, bz + k/2, .012), rbox(k, bh, d - k, wd, -w/2 + k/2, lh, bz + k + (d - k)/2, .012));
+      g.add(rbox(w - .02, back, .1, fab2, .01, sy, bz + .05, .04), rbox(.1, back, d - .02, fab2, -w/2 + .05, sy, .01, .04));      // 靠背板
+      const tuft = (x, z, sx, sz) => { const nx = Math.max(1, Math.round(sx/.32)); for (let i = 0; i < nx; i++) for (const t of [.33, .66]) g.add(cyl(.012, .012, .01, fab2, x - sx/2 + sx*(i + .5)/nx, sy + sh - .002, z - sz/2 + sz*t, 8)); };
+      const n1 = Math.max(2, Math.round((w - k)/.62)), sw1 = (w - k - .02)/n1;
+      for (let i = 0; i < n1; i++){ const x = -w/2 + k + sw1*(i + .5); g.add(rbox(sw1 - .01, sh, k - .12, fab, x, sy, bz + .11 + (k - .12)/2, .05)); g.add(rot(rbox(sw1 - .03, .38, .13, fab, x, sy + .2, bz + .17, .06), -.14)); tuft(x, bz + .11 + (k - .12)/2, sw1 - .01, k - .12); }
+      g.add(rbox(k - .12, sh, k - .12, fab, -w/2 + .11 + (k - .12)/2, sy, bz + .11 + (k - .12)/2, .05));                           // 转角座
+      const n2 = Math.max(1, Math.round((d - k)/.62)), sw2 = (d - k - .02)/n2;
+      for (let i = 0; i < n2; i++){ const z = bz + k + sw2*(i + .5); g.add(rbox(k - .12, sh, sw2 - .01, fab, -w/2 + .11 + (k - .12)/2, sy, z, .05)); g.add(rot(rbox(.13, .38, sw2 - .03, fab, -w/2 + .17, sy + .2, z, .06), 0, 0, .14)); }
+      g.add(rbox(.05, .2, k - .04, wd, w/2 - .025, sy, bz + k/2, .02), rbox(k - .04, .2, .05, wd, -w/2 + k/2, sy, d/2 - .025, .02));  // 两端细木扶手
+      g.add(rot(rbox(.42, .4, .12, fabric(f.pillow || '#efe6d6'), w/2 - .45, sy + .25, bz + .25, .06), -.3, -.3), rot(rbox(.4, .38, .12, fabric(f.pillow2 || '#a85a32'), w/2 - .9, sy + .24, bz + .24, .06), -.3, .2));
+      break;
+    }
+    case 'ychair': {            // Y 形椅（Wishbone 风格）：弯曲扶手横档 + Y 形靠背 + 纸绳编织座面
+      const wd = woodM(f.frame || '#b88a5e'), cord = mat(c || '#d9c9ad', {roughness:.95}), sy = .44, R0 = w/2 - .04;
+      [[-1, 1], [1, 1]].forEach(([sx]) => g.add(rod([sx*(w/2 - .05), 0, d/2 - .05], [sx*(w/2 - .06), sy, d/2 - .07], .014, wd, .019)));
+      [-1, 1].forEach(sx => g.add(rod([sx*(w/2 - .06), 0, bz + .06], [sx*(R0 - .02), .7, bz + .16], .013, wd, .02)));
+      g.add(rbox(w - .08, .035, d - .1, cord, 0, sy - .035, .01, .01));
+      for (let i = 0; i < 9; i++) g.add(box(w - .1, .004, .008, darker(c || '#d9c9ad', .8), 0, sy, -d/2 + .08 + (d - .16)*i/8));
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(R0, .014, 10, 40, Math.PI), wd); arc.rotation.x = Math.PI/2; arc.rotation.z = Math.PI; arc.position.set(0, .7, bz + .16 + .02); arc.scale.set(1, .55, 1); arc.castShadow = true; g.add(arc);
+      g.add(rod([0, sy, bz + .1], [0, .52, bz + .1], .01, wd, .014));
+      [-1, 1].forEach(sx => g.add(rod([0, .52, bz + .1], [sx*.13, .7, bz + .1 - .01], .01, wd)));
+      g.add(rot(rbox(.3, .06, .03, wd, 0, .6, bz + .085, .01), -.1));
       break;
     }
     case 'tvcart': {            // 可移动电视架：带脚轮底座 + 立柱 + 电视（屏幕朝 +z）
