@@ -378,7 +378,7 @@ const NAMES_EN = {
   '洗衣机':'Washer', '洗衣池':'Laundry Sink', '电热水器':'Water Heater', '储物柜':'Storage Cabinet', '65 寸电视':'65" TV',
   '55 寸电视':'55" TV', '对开门冰箱':'French-door Fridge', '柜机空调':'Floor AC', '挂机空调':'Wall AC', '洗碗机':'Dishwasher',
   '蒸烤箱高柜':'Oven Tower', '烘干机':'Dryer', '空气净化器':'Air Purifier', '长书桌':'Long Desk', '办公椅':'Office Chair',
-  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '中古 L 形沙发':'Mid-century L Sofa', 'Y 形椅':'Wishbone Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '户外':'Outdoor', '树脂物置（小）':'Resin Shed (S)', '树脂物置（大）':'Resin Shed (L)', '轿车':'Car', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
+  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '中古 L 形沙发':'Mid-century L Sofa', 'Y 形椅':'Wishbone Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '户外':'Outdoor', '树脂物置（小）':'Resin Shed (S)', '树脂物置（大）':'Resin Shed (L)', '轿车':'Car', '人工木平台':'Composite Deck', '布篷（可收）':'Retractable Awning', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
 };
 const nm = s => LANG === 'en' ? (NAMES_EN[s] ?? s) : LANG === 'zht' ? s2t(s) : s;
 // 静态文案：元素上写 data-en / data-en-title，中文原文首次切换时存进 dataset
@@ -534,7 +534,7 @@ const LIB = [
   {cat:'灯具', items:[
     ['drum','布艺吸顶灯',600,600,'#f3eadb'],['pendant','中古吊灯',900,900,'#6b4a33'],['globe','小吊灯',220,220,'#6b4a33']]},
   {cat:'户外', items:[
-    ['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
+    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
     ['litter','大号猫砂盆',600,500,'#e7e2d8'],['catbowl','猫碗',500,300,'#d9cfc0'],['cattree','猫爬架',600,600,'#d8c3a5']]},
 ];
@@ -741,6 +741,8 @@ function furnSVG(t,w,d,c){
       return s;
     }
     case 'treadmill': return rc(x,y,w,d,c,'rx="50"') + rc(x+90,y+320,w-180,d-400,'#1c1c1e','rx="25"') + rc(x,y,w,230,shade(c,1.4),'rx="40"');
+    case 'deck': { let s = rc(x,y,w,d,c||'#a8825f'); for (let i = 1; i < Math.floor(d/150); i++) s += ln(x, y + i*d/Math.floor(d/150), x + w, y + i*d/Math.floor(d/150), 'stroke-width="2" opacity=".5"'); return s; }
+    case 'awning': return rc(x,y,w,d,'none','stroke-dasharray="90 60" stroke-width="10" opacity=".7"') + ln(x,y+d,x+w,y+d,'stroke-width="12"');
     case 'shed': return rc(x,y,w,d,c||'#c9b89c') + ln(0,y,0,y+d) + ln(x,y+d,x+w,y+d,'stroke-width="3"');
     case 'car': return rc(x,y,w,d,c||'#9aa3ab','rx="300"') + rc(x+120,y+d*.25,w-240,d*.45,'#4a5560','rx="120"');
     case 'lsofa': { const k = Math.min(800, d*.55, w*.42); return `<path d="M${x} ${y}H${x+w}V${y+k}H${x+k}V${y+d}H${x}Z" fill="${c||'#cdbfa8'}" ${ST}/>` + rc(x+20,y+20,w-40,180,shade(c||'#cdbfa8',.85)) + rc(x+20,y+20,180,d-40,shade(c||'#cdbfa8',.85)); }
@@ -2467,6 +2469,21 @@ function buildFurniture(f){
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++){ const o = cyl(.025, .025, .002, mat(band, {roughness:1}), -w/2 + .4 + (w - .8)*i/5, .011, -d/2 + .4 + (d - .8)*j/3, 10); o.castShadow = false; g.add(o); }
       break;
     }
+    case 'deck': {              // 人工木平台：木板沿 x，带幕板
+      const top = (f.h ?? 60)/1000, bm = mat(c || '#a8825f', {roughness:.75}), dk = mat(shade(c || '#a8825f', .78), {roughness:.8});
+      g.add(box(w, top - .03, d, dk, 0, 0, 0));
+      const n = Math.max(1, Math.floor(d/.15));
+      for (let i = 0; i < n; i++) g.add(box(w - .01, .03, d/n - .006, bm, 0, top - .03, -d/2 + (i + .5)*d/n));
+      break;
+    }
+    case 'awning': {            // 布篷：挂在 -z 侧墙上，向 +z 伸出并下倾
+      const h = (f.h ?? 2500)/1000, drop = (f.drop ?? 350)/1000, L = Math.hypot(d, drop), a = Math.atan2(drop, d);
+      const cm = mat(c || '#eee5d4', {roughness:.95, side:THREE.DoubleSide}), al = mat('#3a3b3e', {roughness:.4, metalness:.6});
+      const cv = box(w, .008, L, cm, 0, 0, 0); cv.position.set(0, h - drop/2, 0); cv.rotation.x = a; g.add(cv);
+      [-1, 1].forEach(s => { const arm = box(.04, .03, L*.98, al, 0, 0, 0); arm.position.set(s*(w/2 - .2), h - drop/2 - .05, 0); arm.rotation.x = a; g.add(arm); });
+      g.add(box(w + .12, .14, .16, al, 0, h - .1, -d/2 + .08), box(w, .06, .06, al, 0, h - drop - .07, d/2), box(w, .2, .006, mat(f.valance || '#cdbfa6', {roughness:.95}), 0, h - drop - .26, d/2 + .035));
+      break;
+    }
     case 'shed': {              // 树脂物置：箱体 + 单坡顶 + 对开门（门朝 +z）
       const h = (f.h ?? 1300)/1000, bm = mat(c || '#c9b89c', {roughness:.6}), dk = mat(shade(c || '#c9b89c', .8), {roughness:.6}), fz = d/2;
       g.add(box(w, .05, d, dk, 0, 0, 0), box(w - .02, h - .07, d - .02, bm, 0, .05, 0));
@@ -2652,9 +2669,19 @@ function buildArch(){
       const pl = new THREE.PointLight(0xffd9a8, 0, 7, 1.6); pl.position.set(wx(r.at[0]), H - .25, wz(r.at[1])); lampG.add(pl);
     }
   });
-  FENCES.forEach(([x0, y0, x1, y1, h = 600, t = 120, c = '#b9b2a6']) => {     // 地界围墙 / 栏杆：可以是斜的
-    const L = M(Math.hypot(x1 - x0, y1 - y0)), o = new THREE.Mesh(new THREE.BoxGeometry(L, M(h), M(t)), mat(c, {roughness:.85}));
-    o.position.set(wx((x0 + x1)/2), M(h)/2, wz((y0 + y1)/2)); o.rotation.y = -Math.atan2(y1 - y0, x1 - x0); o.castShadow = o.receiveShadow = true; archFloor.add(o);
+  FENCES.forEach(([x0, y0, x1, y1, h = 600, t = 120, c = '#b9b2a6', kind]) => {     // 地界围墙 / 栏杆：可以是斜的；kind='mesh' = 基础矮墙 + 网格围栏
+    const L = M(Math.hypot(x1 - x0, y1 - y0)), g = new THREE.Group();
+    g.position.set(wx((x0 + x1)/2), 0, wz((y0 + y1)/2)); g.rotation.y = -Math.atan2(y1 - y0, x1 - x0);
+    const add = (w, hh, d, m, x, y) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), m); o.position.set(x, y + hh/2, 0); o.castShadow = o.receiveShadow = true; g.add(o); };
+    if (kind === 'mesh'){
+      const base = .15, top = M(h), mm = mat(c, {roughness:.5, metalness:.4}), cb = mat('#c8c4bc', {roughness:.9});
+      add(L, base, .12, cb, 0, 0);
+      add(L, .03, .03, mm, 0, top - .03); add(L, .03, .03, mm, 0, base + .05);
+      for (let x = -L/2; x <= L/2 + 1e-6; x += 2) add(.05, top - base, .05, mm, x, base);
+      for (let x = -L/2 + .1; x < L/2; x += .1) add(.006, top - base - .03, .006, mm, x, base);
+      for (const yy of [.35, .6]) if (base + yy < top - .05) add(L, .006, .006, mm, 0, base + yy);
+    } else add(L, M(h), M(t), mat(c, {roughness:.85}), 0, 0);
+    archFloor.add(g);
   });
   [...DOORS, ...SLIDES].forEach(d => { const [x0, y0, x1, y1] = d.rect; const s = box(M(x1-x0), .012, M(y1-y0), mat('#d8d0c0', {roughness:.3}), wx((x0+x1)/2), 0, wz((y0+y1)/2)); s.castShadow = false; archFloor.add(s); });
   WALLS.forEach((w, i) => {
@@ -2717,7 +2744,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art', 'globe', 'drum'];
+  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art', 'globe', 'drum', 'awning'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
