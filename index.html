@@ -754,6 +754,7 @@ function furnSVG(t,w,d,c){
     case 'storagebed': return rc(x,y,w,d,c) + rc(x+40,y+200,w-80,d-240,'#f6f3ee') + rc(x+40,y+d*.34,w-80,d*.62,'#efe9de') + rc(x,y,w,200,shade(c,.8));
     case 'cattree': return rc(x,y,w,d,'#e3d4bd','rx="60"') + ec(-w*.25,-d*.25,50,50,'#c9b48e') + ec(w*.25,d*.25,50,50,'#c9b48e');
     case 'cat': return ec(0,0,w/2*.55,d/2*.9,'#f1ebe0') + ec(0,d*.42,w*.22,w*.2,'#6e5a4b');
+    case 'sicrack': return rc(x,y,w,d,c||'#d8c3a5','opacity=".6"') + ln(x,0,x+w,0,'stroke-width="12"');
     case 'litter': return rc(x,y,w,d,c||'#e7e2d8','rx="60"') + rc(x+60,y+60,w-120,d-120,'#cfc6b7','rx="50"');
     case 'catbowl': return rc(x,y,w,d,'#d9cfc0','rx="30"') + ec(-w*.22,0,70,70,'#fff') + ec(w*.22,0,70,70,'#fff');
     case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
@@ -2611,6 +2612,21 @@ function buildFurniture(f){
       g.add(blob(L*.22, L*.2, L*.2, pt, 0, y + L*.4, L*1.08, 14));                       // 脸部重点色
       [-1, 1].forEach(s => g.add(rot(cyl(0, L*.12, L*.22, pt, s*L*.2, y + L*.66, L*.86, 10), 0, 0, s*-.3)));
       g.add(rot(blob(L*.16, L*.14, L*.6, pt, L*.42, y + L*.18, -L*.55, 14), 0, .5, 0));
+      break;
+    }
+    case 'sicrack': {           // SIC 挂衣架：顶层置物板 + 挂衣杆 + 隔板，隔板下空着放猫砂盆（背靠 -z 墙）
+      const wd = mat(c || '#d8c3a5', {roughness:.7}), mt = mat('#2e2c2a', {roughness:.4, metalness:.6});
+      const top = (f.top ?? 1850)/1000, rod = (f.rod ?? 1700)/1000, mid = (f.mid ?? 620)/1000;
+      [-1, 1].forEach(s => g.add(box(.025, top + .02, d, wd, s*(w/2 - .0125), 0, 0)));
+      g.add(box(w, .025, d, wd, 0, top, 0), box(w, .025, d, wd, 0, mid, 0), box(w, top - mid, .012, wd, 0, mid, -d/2 + .006));
+      const r = cyl(.013, .013, w - .06, mt, 0, 0, 0, 12); r.rotation.z = Math.PI/2; r.position.set(0, rod, 0); g.add(r);
+      const coats = ['#8a7b6a', '#3f4a52', '#c9b79c', '#6b5446', '#a9a39a'];
+      const n = Math.max(2, Math.floor((w - .1)/.17));
+      for (let i = 0; i < n; i++){
+        const x = -w/2 + .08 + i*(w - .16)/(n - 1), L = (i % 2 ? .85 : .7) * Math.min(1, (rod - mid - .08)/.85);
+        g.add(box(.05, .02, .42, mt, x, rod - .02, 0), rbox(.07, L, .44, fabric(coats[i % coats.length]), x, rod - .04 - L, 0, .02));
+      }
+      [[-.3, '#efe9df'], [0, '#d9cbb5'], [.3, '#efe9df']].forEach(([x, cc]) => g.add(rbox(Math.min(.32, w*.27), .22, d*.8, mat(cc, {roughness:.8}), x*w, top + .025, 0, .02)));
       break;
     }
     case 'litter': {            // 带罩大号猫砂盆
