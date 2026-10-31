@@ -365,7 +365,7 @@ const NAMES_EN = {
   '子女房':"Children's Room", '厨房':'Kitchen', '餐厅':'Dining', '过道':'Hallway', '客厅':'Living Room', '休闲阳台':'Leisure Balcony',
   '主卧飘窗':'Master Bay Window', '子女房飘窗':"Children's Bay Window",
   '橡木地板':'Oak Flooring', '胡桃木地板':'Walnut Flooring', '800 地砖':'800 Tile', '600 地砖':'600 Tile', '大理石':'Marble',
-  '草坪':'Lawn', '碎石':'Gravel', '混凝土':'Concrete', '沥青路面':'Asphalt', '300 防滑砖':'300 Anti-slip Tile', '水磨石':'Terrazzo', '满铺地毯':'Wall-to-wall Carpet', '榻榻米':'Tatami', '浅色木地板':'Pale Oak Flooring', '琉球榻榻米':'Ryukyu Tatami',
+  '草坪':'Lawn', '荒草地':'Wild grass', '碎石':'Gravel', '混凝土':'Concrete', '沥青路面':'Asphalt', '300 防滑砖':'300 Anti-slip Tile', '水磨石':'Terrazzo', '满铺地毯':'Wall-to-wall Carpet', '榻榻米':'Tatami', '浅色木地板':'Pale Oak Flooring', '琉球榻榻米':'Ryukyu Tatami',
   '卧室':'Bedroom', '餐厨':'Dining & Kitchen', '卫浴':'Bathroom', '家电':'Appliances', '书房 · 休闲':'Study & Leisure',
   '双人床 1.8m':'Double Bed 1.8m', '双人床 1.5m':'Double Bed 1.5m', '双人床':'Double Bed', '单人床':'Single Bed', '婴儿床':'Crib',
   '床头柜':'Nightstand', '衣柜':'Wardrobe', '小衣柜':'Small Wardrobe', '梳妆台':'Dresser', '书桌':'Desk', '椅子':'Chair',
@@ -497,6 +497,7 @@ const MATS = {
   pale:    {name:'浅色木地板', price:300, sw:'#e9e4da'},
   ryukyu:  {name:'琉球榻榻米', price:350, sw:'#cbd0b8'},
   grass:   {name:'草坪', price:30, sw:'#9db67a'},
+  wild:    {name:'荒草地', price:0, sw:'#b3ae84'},
   gravel:  {name:'碎石', price:20, sw:'#cfc9bd'},
   concrete:{name:'混凝土', price:80, sw:'#cfccc6'},
   asphalt: {name:'沥青路面', price:0, sw:'#7a7a7c'},
@@ -628,6 +629,7 @@ function buildDefs(){
       <rect width="1820" height="1820" fill="#cdd2bb"/><rect width="910" height="910" fill="#c2c8ae"/><rect x="910" y="910" width="910" height="910" fill="#c2c8ae"/>
       <path d="M0 0H1820M0 910H1820M0 0V1820M910 0V1820" stroke="#a9ae93" stroke-width="10"/></pattern>
     <pattern id="m-grass" patternUnits="userSpaceOnUse" width="600" height="600"><rect width="600" height="600" fill="#a9c187"/><path d="M80 90l10-40M300 200l8-35M480 420l10-38M150 470l9-36M420 110l8-34" stroke="#7f9d5c" stroke-width="12"/></pattern>
+    <pattern id="m-wild" patternUnits="userSpaceOnUse" width="700" height="700"><rect width="700" height="700" fill="#c4bf9a"/><path d="M90 120l14-60M340 260l10-50M560 480l12-55M180 560l12-50M500 140l10-45" stroke="#9c9670" stroke-width="14"/></pattern>
     <pattern id="m-gravel" patternUnits="userSpaceOnUse" width="400" height="400"><rect width="400" height="400" fill="#d6d0c4"/><circle cx="60" cy="80" r="18" fill="#bdb6a8"/><circle cx="250" cy="150" r="14" fill="#c5beb1"/><circle cx="140" cy="300" r="20" fill="#b9b2a4"/><circle cx="330" cy="330" r="12" fill="#bdb6a8"/></pattern>
     <pattern id="m-concrete" patternUnits="userSpaceOnUse" width="3000" height="3000"><rect width="3000" height="3000" fill="#d9d6d0"/><path d="M0 0H3000M0 0V3000" stroke="#bdb9b2" stroke-width="20"/></pattern>
     <pattern id="m-asphalt" patternUnits="userSpaceOnUse" width="2000" height="2000"><rect width="2000" height="2000" fill="#8a8a8d"/></pattern>
@@ -754,6 +756,8 @@ function furnSVG(t,w,d,c){
     case 'storagebed': return rc(x,y,w,d,c) + rc(x+40,y+200,w-80,d-240,'#f6f3ee') + rc(x+40,y+d*.34,w-80,d*.62,'#efe9de') + rc(x,y,w,200,shade(c,.8));
     case 'cattree': return rc(x,y,w,d,'#e3d4bd','rx="60"') + ec(-w*.25,-d*.25,50,50,'#c9b48e') + ec(w*.25,d*.25,50,50,'#c9b48e');
     case 'cat': return ec(0,0,w/2*.55,d/2*.9,'#f1ebe0') + ec(0,d*.42,w*.22,w*.2,'#6e5a4b');
+    case 'masu': return ec(0,0,w/2,d/2,c||'#f2f2f0') + ln(-w*.3,-d*.3,w*.3,d*.3) + ln(-w*.3,d*.3,w*.3,-d*.3);
+    case 'wheater': return rc(x,y,w,d,c||'#e8e6e1','rx="30"');
     case 'sicrack': return rc(x,y,w,d,c||'#d8c3a5','opacity=".6"') + ln(x,0,x+w,0,'stroke-width="12"');
     case 'litter': return rc(x,y,w,d,c||'#e7e2d8','rx="60"') + rc(x+60,y+60,w-120,d-120,'#cfc6b7','rx="50"');
     case 'catbowl': return rc(x,y,w,d,'#d9cfc0','rx="30"') + ec(-w*.22,0,70,70,'#fff') + ec(w*.22,0,70,70,'#fff');
@@ -1802,7 +1806,7 @@ const TEX = {
   terrazzo:{sx:.5, sy:.5, base:'#e6dfd3', rough:.4}, carpet:{sx:.3, sy:.3, base:'#c6bfd2', rough:1},
   tatami:{sx:.91, sy:1.82, base:'#cfd29c', grout:'#a7aa70', rough:.9},
   pale:{sx:1.8, sy:.36, base:'#e8e2d7', rough:.5}, ryukyu:{sx:.91, sy:.91, base:'#ccd1ba', grout:'#b4b99f', rough:.9},
-  grass:{sx:1, sy:1, base:'#8fae6a', rough:1}, gravel:{sx:.6, sy:.6, base:'#cdc7bb', rough:1}, concrete:{sx:3, sy:3, base:'#cfccc6', grout:'#b9b5ae', rough:.85}, asphalt:{sx:2, sy:2, base:'#6f6f72', rough:.95},
+  grass:{sx:1, sy:1, base:'#8fae6a', rough:1}, wild:{sx:1.4, sy:1.4, base:'#a8a27a', rough:1}, gravel:{sx:.6, sy:.6, base:'#cdc7bb', rough:1}, concrete:{sx:3, sy:3, base:'#cfccc6', grout:'#b9b5ae', rough:.85}, asphalt:{sx:2, sy:2, base:'#6f6f72', rough:.95},
 };
 const floorMats = {};
 function floorMat(kind){
@@ -1825,7 +1829,7 @@ function floorMat(kind){
       });
       g.fillStyle = rgbK(s.base, kind === 'pale' ? .86 : .62); g.fillRect(0, r*rowH, W, 2.5);
     }
-  } else if (kind === 'grass'){
+  } else if (kind === 'grass' || kind === 'wild'){
     for (let k = 0; k < 2600; k++){ g.fillStyle = `rgba(${40+R()*40|0},${90+R()*60|0},${30+R()*30|0},${.25+R()*.35})`; g.fillRect(R()*W, R()*Hh, 2, 4 + R()*5); }
   } else if (kind === 'gravel'){
     for (let k = 0; k < 2200; k++){ const v = 150 + R()*90 | 0; g.fillStyle = `rgb(${v},${v-6},${v-14})`; g.beginPath(); g.arc(R()*W, R()*Hh, 1.5 + R()*3, 0, 7); g.fill(); }
@@ -2612,6 +2616,15 @@ function buildFurniture(f){
       g.add(blob(L*.22, L*.2, L*.2, pt, 0, y + L*.4, L*1.08, 14));                       // 脸部重点色
       [-1, 1].forEach(s => g.add(rot(cyl(0, L*.12, L*.22, pt, s*L*.2, y + L*.66, L*.86, 10), 0, 0, s*-.3)));
       g.add(rot(blob(L*.16, L*.14, L*.6, pt, L*.42, y + L*.18, -L*.55, 14), 0, .5, 0));
+      break;
+    }
+    case 'masu': {              // 地面检查井盖（桝）
+      const lid = cyl(w/2, w/2, .015, mat(c || '#f2f2f0', {roughness:.6}), 0, 0, 0, 28); g.add(lid);
+      g.add(box(w*.6, .004, .02, mat('#9a968e'), 0, .015, 0), box(.02, .004, w*.6, mat('#9a968e'), 0, .015, 0));
+      break;
+    }
+    case 'wheater': {           // 壁挂燃气热水器（离地约 1m）
+      g.add(rbox(w, .6, d, mat(c || '#e8e6e1', {roughness:.5}), 0, .9, 0, .02), box(.05, .9, .05, mat('#9a9690'), -w/4, 0, 0), box(.05, .9, .05, mat('#9a9690'), w/4, 0, 0));
       break;
     }
     case 'sicrack': {           // SIC 挂衣架：顶层置物板 + 挂衣杆 + 隔板，隔板下空着放猫砂盆（背靠 -z 墙）
