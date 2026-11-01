@@ -22,11 +22,8 @@ button,input,select{font:inherit;color:inherit}
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input{-webkit-user-select:text;user-select:text}
-.app.clean{grid-template-rows:0 minmax(0,1fr) 0!important;grid-template-columns:0 minmax(0,1fr) 0!important}
-.app.clean>header,.app.clean>aside,.app.clean>footer,.app.clean .modehint,.app.clean .scalebar{display:none!important}
-#uiRestore{position:fixed;top:calc(10px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));z-index:60;display:none;
-  background:rgba(255,253,249,.92);border:1px solid var(--line);border-radius:18px;padding:6px 12px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
-body.clean #uiRestore{display:block}
+.app.clean>header>*:not(.brand):not(#floorSel):not(#planWrap):not(#hideUI):not(.keep){display:none!important}
+
 header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 14px;
   background:var(--panel);border-bottom:1px solid var(--line)}
 .brand{display:flex;flex-direction:column;margin-right:8px;line-height:1.25}
@@ -230,7 +227,6 @@ main.drawer-panel #fab{opacity:0;visibility:hidden}
 </script>
 </head>
 <body>
-<button id="uiRestore" class="btn" title="显示工具栏 (H)">☰ 显示工具栏</button>
 <div class="app">
   <header>
     <div class="grp" id="paneBtns">
@@ -265,7 +261,7 @@ main.drawer-panel #fab{opacity:0;visibility:hidden}
       <button class="btn" id="vIso" data-en="Iso">斜视</button>
       <button class="btn" id="vTop" data-en="Top">俯视</button>
     </div>
-    <div class="grp">
+    <div class="grp keep">
       <button class="btn" id="undo" title="撤销 (Ctrl+Z)" data-en-title="Undo (Ctrl+Z)" data-en="Undo">撤销</button>
       <button class="btn" id="redo" title="重做 (Ctrl+Shift+Z)" data-en-title="Redo (Ctrl+Shift+Z)" data-en="Redo">重做</button>
       <button class="btn primary" id="saveBtn" hidden title="保存当前楼层的布置，换设备打开也能看到" data-en-title="Save this floor's layout so it opens the same on any device" data-en="Save">保存</button>
@@ -295,7 +291,7 @@ main.drawer-panel #fab{opacity:0;visibility:hidden}
       <button class="btn chip" data-lang="zht" title="繁體中文">繁</button>
       <button class="btn chip" data-lang="en" title="English">EN</button>
     </div>
-    <button class="btn" id="hideUI" title="隐藏所有工具栏和侧栏，只留画面 (H)" data-en-title="Hide all toolbars and panels (H)" style="border:1px solid var(--line);background:#fff" data-en="◱ Hide UI">◱ 隐藏界面</button>
+    <button class="btn" id="hideUI" title="收起 2D/3D、拆改墙体等切换选项 (H)" data-en-title="Hide view / wall / layer toggles (H)" style="border:1px solid var(--line);background:#fff">◱ 收起选项</button>
     <button class="btn" id="fullscreen" title="全屏 (Shift+F)" style="border:1px solid var(--line);background:#fff">⛶ 全屏</button>
     <details class="menu"><summary class="btn" data-en="File ▾">文件 ▾</summary>
       <div class="menu-pop">
@@ -1593,11 +1589,13 @@ function syncFullscreen(){
 $('#fullscreen').onclick = toggleFullscreen;
 function toggleCleanUI(on){
   const app = $('.app'); on = on ?? !app.classList.contains('clean');
-  app.classList.toggle('clean', on); document.body.classList.toggle('clean', on);
-  $('#uiRestore').textContent = '☰ ' + tr('显示工具栏', 'Show toolbar');
-  requestAnimationFrame(() => { if (!is3D()) fitView(); dispatchEvent(new Event('resize')); });
+  app.classList.toggle('clean', on);
+  try { localStorage.setItem('huxing-clean', on ? '1' : ''); } catch(e) {}
+  const b = $('#hideUI'); b.textContent = on ? tr('☰ 显示选项', '☰ Show options') : tr('◱ 收起选项', '◱ Hide options');
+  b.title = (on ? tr('显示顶栏的切换选项', 'Show toolbar options') : tr('收起 2D/3D、拆改墙体等切换选项', 'Hide view / wall / layer toggles')) + ' (H)';
+  requestAnimationFrame(() => dispatchEvent(new Event('resize')));
 }
-$('#hideUI').onclick = () => toggleCleanUI(true); $('#uiRestore').onclick = () => toggleCleanUI(false);
+$('#hideUI').onclick = () => toggleCleanUI(); try { if (localStorage.getItem('huxing-clean')) toggleCleanUI(true); } catch(e) {}
 ['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, syncFullscreen));
 // 已从主屏幕以独立 App 方式打开时本就是全屏，隐藏按钮
 if (navigator.standalone || matchMedia('(display-mode: standalone)').matches) $('#fullscreen').hidden = true;
@@ -1631,7 +1629,7 @@ new ResizeObserver(() => {
 
 function setLang(l){
   LANG = l; try { localStorage.setItem(LANG_KEY, l); } catch(e) {}
-  applyStaticLang(); syncFullscreen(); syncModeHint(); syncPaneBtns();
+  applyStaticLang(); syncFullscreen(); syncModeHint(); syncPaneBtns(); toggleCleanUI($('.app').classList.contains('clean'));
   buildLib(); renderOpenings(); renderAll();
   $('#tip').textContent = TIPS()[viewMode];
   window.View3D?.relang();
