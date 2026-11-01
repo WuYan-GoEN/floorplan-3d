@@ -560,6 +560,7 @@ const LIB = [
     ['texrug','摩卡菱格地毯 200×250',2500,2000,'#8a6f58',{pattern:'berber'}],
     ['massage','按摩椅 フジ医療器 M25 AS-R710',690,1330,'#2b2725'],
     ['recliner','电动沙发 2人 ニトリ 皮革',1800,980,'#8f7260',{leather:true}],
+    ['recliner','电动沙发 ニトリ EK7980 布面浅灰 3人',1950,950,'#c9c6c0',{leather:false, seats:3}],
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
     ['trestle','餐桌 Nitori ヤマト160 深棕',1600,900,'#4e3322',{h:680}],
     ['photorug','地毯 ヨーロピアン 200×250',2500,2000,'#ebe4d4',{tex:'sav01'}]]},
@@ -1989,6 +1990,22 @@ function leatherNormal(){
   ng.putImageData(out, 0, 0); _leatherN = new THREE.CanvasTexture(nc); _leatherN.wrapS = _leatherN.wrapT = THREE.RepeatWrapping; _leatherN.repeat.set(7, 7);
   return _leatherN;
 }
+// 布面（聚酯纤维编织）：细密织纹法线 + 绒面光泽
+let _weaveN = null;
+function weaveNormal(){
+  if (_weaveN) return _weaveN;
+  const N = 128, cv = document.createElement('canvas'); cv.width = cv.height = N; const g = cv.getContext('2d'), im = g.createImageData(N, N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++){
+    const i = (y*N + x)*4, a = Math.sin(x*Math.PI/2)*.5, b = Math.sin(y*Math.PI/2)*.5, n = (Math.random() - .5)*.3;
+    im.data[i] = (a + n)*60 + 128; im.data[i+1] = (b + n)*60 + 128; im.data[i+2] = 240; im.data[i+3] = 255;
+  }
+  g.putImageData(im, 0, 0); _weaveN = new THREE.CanvasTexture(cv); _weaveN.wrapS = _weaveN.wrapT = THREE.RepeatWrapping; _weaveN.repeat.set(30, 30); return _weaveN;
+}
+const _fw = new Map();
+function weaveMat(c){
+  if (!_fw.has(c)) _fw.set(c, new THREE.MeshPhysicalMaterial({color:c, roughness:.92, normalMap:weaveNormal(), normalScale:new THREE.Vector2(.35, .35), sheen:.6, sheenRoughness:.7, sheenColor:new THREE.Color(c).lerp(new THREE.Color('#ffffff'), .35)}));
+  return _fw.get(c);
+}
 const _lm = new Map();
 function leatherMat(c, o = {}){
   const key = c + JSON.stringify(o);
@@ -2663,8 +2680,8 @@ function buildFurniture(f){
       break;
     }
     case 'recliner': {          // 电动沙发（ニトリ款）：皮革、宽扶手带杯架、每座独立靠背 + 头枕、坐垫前脸分缝、细黑脚
-      const C = c || '#8f7260', lm = leatherMat(C), ld = leatherMat(darker(C, .86)), seam = mat(darker(C, .55), {roughness:.6});
-      const n = Math.max(1, Math.round((w - .5)/.66)), a = .21, cw = (w - 2*a)/n, ft = .06, sh = .46, bk = .2;
+      const C = c || '#8f7260', L = f.leather !== false, lm = L ? leatherMat(C) : weaveMat(C), ld = L ? leatherMat(darker(C, .86)) : weaveMat(darker(C, .9)), seam = mat(darker(C, L ? .55 : .75), {roughness:.8});
+      const n = f.seats || Math.max(1, Math.round((w - .5)/.66)), a = .21, cw = (w - 2*a)/n, ft = .06, sh = .46, bk = .2;
       const Z = z => bz + z;                                                                          // 以靠背外侧为 0 往前量
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => g.add(cyl(.018, .024, ft, mat('#161514', {roughness:.35, metalness:.3}), x*(w/2 - .07), 0, z*(d/2 - .08), 14)));
       g.add(rbox(w - .04, .05, d - .06, ld, 0, ft, -.01, .02));
