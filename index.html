@@ -544,7 +544,9 @@ const LIB = [
     ['kboard','餐边柜 灰褐石纹1600',1600,490,'#9a8a7c',{h:1970, tex:'gp1600'}],
     ['kboard','餐边柜 カイト160 浅灰石纹',1610,510,'#cfc8bf',{h:1974, tex:'kite160'}],
     ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
-    ['kboard','餐边柜 ニトリ リガーレ160 白',1600,510,'#efece6',{h:2270, tex:'ligare160'}],
+    ['kboard','餐边柜 ニトリ リガーレ160 白（无上置き）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
+    ['sledtable','餐桌 原木雪橇脚 150×80',1500,800,'#d9a86c',{h:700}],
+    ['massage','按摩椅 フジ医療器 M25 AS-R710',690,1330,'#2b2725'],
     ['recliner','电动沙发 2人 浅灰',1800,980,'#d6d1c8'],
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
     ['trestle','餐桌 Nitori ヤマト160 深棕',1600,900,'#4e3322',{h:680}],
@@ -783,6 +785,7 @@ function furnSVG(t,w,d,c){
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
     case 'ceilpanel': return rc(x,y,w,d,'none','stroke-dasharray="60 40" stroke-width="8" opacity=".5"');
     case 'recliner': { const a = 250; return rc(x,y,w,d,c||'#d6d1c8','rx="80"') + rc(x+a,y,w-2*a,260,shade(c||'#d6d1c8',.85)) + ln(0,y+260,0,y+d,DASH); }
+    case 'sledtable': return rc(x,y,w,d,c||'#d9a86c','rx="60"') + ln(x+300,y+40,x+300,y+d-40,DASH) + ln(x+w-300,y+40,x+w-300,y+d-40,DASH);
     case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
     case 'kboard': return rc(x,y,w,d,c||'#b4936f') + ln(x,y+d-30,x+w,y+d-30,'stroke-width="6"');
     case 'photorug': return rc(x,y,w,d,c||'#e9e2d3','fill-opacity=".75"') + rc(x+80,y+80,w-160,d-160,'none','stroke-width="6" opacity=".6"');
@@ -2516,6 +2519,16 @@ function buildFurniture(f){
         g.add(rot(rbox(cw - .08, .22, .16, fab, x, lh + .84, bz + .1, .07), -.12));          // 头枕
         g.add(cyl(.012, .012, .01, dk, x, lh + .62, bz + bd + .005, 8).rotateX(Math.PI/2));
       }
+      break;
+    }
+    case 'sledtable': {         // 北欧原木餐桌：圆角厚桌面 + 两端双圆柱腿立在雪橇形地脚上
+      const T = (f.h ?? 700)/1000, wd = woodM(c || '#d9a86c');
+      const geo = new THREE.ExtrudeGeometry(rrect(w, d, .06), {depth:.03, bevelEnabled:true, bevelThickness:.006, bevelSize:.006, bevelSegments:2, curveSegments:12});
+      geo.rotateX(-Math.PI/2); const top = mesh(geo, wd); top.position.y = T - .036; g.add(top);
+      [-1, 1].forEach(s => { const x = s*(w/2 - .3);
+        g.add(rbox(.05, .035, d - .06, wd, x, 0, 0, .015), box(.05, .06, d - .2, wd, x, T - .095, 0));
+        [-1, 1].forEach(t => g.add(cyl(.022, .022, T - .07, wd, x, .035, t*.11, 16))); });
+      g.add(box(.36, .003, .26, fabric('#e9e3d6'), -w*.22, T, d*.18), box(.36, .003, .26, fabric('#e9e3d6'), w*.22, T, -d*.18));
       break;
     }
     case 'trestle': {           // 和风厚板餐桌：厚桌面 + 两端 T 形脚 + 横撑（如 Nitori ヤマト）
