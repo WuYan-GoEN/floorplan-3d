@@ -1938,6 +1938,46 @@ const ceramic = (o = {}) => mat('#fbfbf9', {roughness:.12, ...o});
 const fabric = c => mat(c, {roughness:.96});
 const woodM = c => mat(c, {roughness:.55});
 const screenMat = (glow = '#1a2636') => mat('#0b0e13', {roughness:.1, metalness:.3, emissive:glow, emissiveIntensity:.35});
+// 皮革：程序生成荔枝纹（pebble grain）法线贴图 + 轻微清漆光泽
+let _leatherN = null;
+function leatherNormal(){
+  if (_leatherN) return _leatherN;
+  const N = 256, hc = document.createElement('canvas'); hc.width = hc.height = N; const g = hc.getContext('2d');
+  g.fillStyle = '#808080'; g.fillRect(0, 0, N, N); let sd = 7; const R = () => (sd = (sd*16807) % 2147483647)/2147483647;
+  for (let k = 0; k < 1400; k++){ const x = R()*N, y = R()*N, r = 2 + R()*5; for (const [dx, dy] of [[0,0],[N,0],[-N,0],[0,N],[0,-N]]){ const gr = g.createRadialGradient(x+dx, y+dy, 0, x+dx, y+dy, r); gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x+dx, y+dy, r, 0, 7); g.fill(); } }
+  const h = g.getImageData(0, 0, N, N).data, nc = document.createElement('canvas'); nc.width = nc.height = N; const ng = nc.getContext('2d'), out = ng.createImageData(N, N);
+  const H = (x, y) => h[(((y + N) % N)*N + ((x + N) % N))*4]/255;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++){
+    const dx = (H(x+1, y) - H(x-1, y))*2.2, dy = (H(x, y+1) - H(x, y-1))*2.2, l = Math.hypot(dx, dy, 1), i = (y*N + x)*4;
+    out.data[i] = (-dx/l*.5 + .5)*255; out.data[i+1] = (-dy/l*.5 + .5)*255; out.data[i+2] = (1/l*.5 + .5)*255; out.data[i+3] = 255;
+  }
+  ng.putImageData(out, 0, 0); _leatherN = new THREE.CanvasTexture(nc); _leatherN.wrapS = _leatherN.wrapT = THREE.RepeatWrapping; _leatherN.repeat.set(7, 7);
+  return _leatherN;
+}
+const _lm = new Map();
+function leatherMat(c, o = {}){
+  const key = c + JSON.stringify(o);
+  if (!_lm.has(key)){
+    const m = new THREE.MeshPhysicalMaterial({color:c, roughness:o.rough ?? .5, normalMap:leatherNormal(), normalScale:new THREE.Vector2(.45, .45), clearcoat:o.coat ?? .3, clearcoatRoughness:.42, sheen:.25, sheenRoughness:.6, sheenColor:new THREE.Color(c).lerp(new THREE.Color('#ffffff'), .3)});
+    if (envTex){ m.envMap = envTex; m.envMapIntensity = .45; }
+    _lm.set(key, m);
+  }
+  return _lm.get(key);
+}
+// 实木拼板：一条条宽 4–6cm 的直纹木条，深浅略有差别
+const _wm = new Map();
+function staveWood(c){
+  if (_wm.has(c)) return _wm.get(c);
+  const W = 512, Hh = 512, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const g = cv.getContext('2d');
+  const base = new THREE.Color(c); let sd = 3; const R = () => (sd = (sd*16807) % 2147483647)/2147483647;
+  let y = 0; while (y < Hh){ const sh = 22 + R()*18, k = .9 + R()*.2, cc = base.clone().multiplyScalar(k);
+    g.fillStyle = '#' + cc.getHexString(); g.fillRect(0, y, W, sh);
+    for (let i = 0; i < 26; i++){ g.strokeStyle = `rgba(90,55,25,${.05 + R()*.09})`; g.lineWidth = .6 + R()*1.2; g.beginPath(); const yy = y + R()*sh; g.moveTo(0, yy); for (let x = 0; x <= W; x += 32) g.lineTo(x, yy + Math.sin(x*.01 + i)*(1 + R()*2)); g.stroke(); }
+    g.fillStyle = 'rgba(80,50,25,.12)'; g.fillRect(0, y, W, 1); y += sh; }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1.2, 1.2);
+  const m = new THREE.MeshStandardMaterial({map:t, roughness:.48}); if (envTex){ m.envMap = envTex; m.envMapIntensity = .35; }
+  _wm.set(c, m); return m;
+}
 const glowMat = (c = '#fff4dc', e = '#ffdca0', k = .5) => mat(c, {emissive:e, emissiveIntensity:k, roughness:.9, side:THREE.DoubleSide});
 
 // 拉手：y 为拉手中心，z 为门板正面
@@ -2508,24 +2548,58 @@ function buildFurniture(f){
       if (f.lights) for (let i = 0; i < f.lights; i++) g.add(cyl(.05, .05, .006, glowMat('#fff8ea', '#ffe8c0', .9), 0, y0 - .004, -d/2 + d*(i + .5)/f.lights, 20));
       break;
     }
-    case 'recliner': {          // 电动沙发（ニトリ款）：方正宽扶手带杯架、短黑脚、两段式靠背 + 独立头枕、坐垫前脸分缝
-      const C = c || '#8f7260', L = f.leather !== false;
-      const fab = L ? mat(C, {roughness:.38}) : fabric(C), dk = L ? mat(darker(C, .9), {roughness:.4}) : fabric(darker(C, .9));
-      const n = Math.max(1, Math.round((w - .5)/.66)), a = .22, cw = (w - 2*a)/n, ft = .05, sh = .45, bk = .18, backH = .9, headH = 1.03;
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => g.add(box(.05, ft, .05, mat('#1c1b1a', {roughness:.5}), x*(w/2 - .08), 0, z*(d/2 - .08))));
-      g.add(rbox(w - .1, .1, d - .12, dk, 0, ft, -.02, .02));
+    case 'recliner': {          // 电动沙发（ニトリ款）：皮革、宽扶手带杯架、每座独立靠背 + 头枕、坐垫前脸分缝、细黑脚
+      const C = c || '#8f7260', lm = leatherMat(C), ld = leatherMat(darker(C, .86)), seam = mat(darker(C, .55), {roughness:.6});
+      const n = Math.max(1, Math.round((w - .5)/.66)), a = .21, cw = (w - 2*a)/n, ft = .06, sh = .46, bk = .2;
+      const Z = z => bz + z;                                                                          // 以靠背外侧为 0 往前量
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => g.add(cyl(.018, .024, ft, mat('#161514', {roughness:.35, metalness:.3}), x*(w/2 - .07), 0, z*(d/2 - .08), 14)));
+      g.add(rbox(w - .04, .05, d - .06, ld, 0, ft, -.01, .02));
+      // 靠背外壳
+      g.add(rbox(w - .02, .86 - ft, bk, lm, 0, ft, Z(bk/2), .05));
+      // 扶手：主体 + 顶部软垫 + 前脸分缝 + 杯架
       [-1, 1].forEach(s => {
-        g.add(rbox(a, .62 - ft, d, fab, s*(w/2 - a/2), ft, 0, .05));
-        g.add(cyl(.04, .04, .012, mat('#2a2928', {roughness:.4}), s*(w/2 - a/2), .62, d/2 - .2, 20));
+        const x = s*(w/2 - a/2);
+        g.add(rbox(a, .55 - ft, d - .01, lm, x, ft, .005, .06));
+        g.add(rbox(a + .01, .09, d - .02, lm, x, .53, .01, .045));
+        g.add(box(a - .04, .004, .004, seam, x, .535, d/2 - .005));
+        g.add(box(.004, .004, d - .1, seam, x - s*(a/2 - .015), .535, .01));
+        const cup = new THREE.Mesh(new THREE.TorusGeometry(.04, .006, 10, 28), mat('#c9c9c7', {metalness:.9, roughness:.25})); cup.rotation.x = Math.PI/2; cup.position.set(x, .621, d/2 - .2); g.add(cup);
+        g.add(cyl(.036, .036, .004, mat('#1b1a19', {roughness:.6}), x, .617, d/2 - .2, 24));
+        g.add(box(.004, .3, .004, seam, s*(w/2 - a) + s*.002, .2, d/2 - .02));
       });
-      g.add(rbox(w - 2*a + .02, backH - ft, bk, dk, 0, ft, bz + bk/2, .04));
       for (let i = 0; i < n; i++){
-        const x = -w/2 + a + cw/2 + i*cw, sd = d - bk - .02;
-        g.add(rbox(cw - .01, sh - ft - .05, sd, fab, x, ft + .04, bz + bk + sd/2, .05));                          // 坐垫（前脸几乎到地）
-        g.add(rot(rbox(cw - .02, backH - sh + .02, .2, fab, x, sh - .02, bz + bk + .04, .07), -.07));            // 靠背垫
-        g.add(cyl(.012, .012, .01, dk, x, sh + (backH - sh)*.55, bz + bk + .145, 10).rotateX(Math.PI/2));
-        g.add(rot(rbox(cw - .04, headH - backH + .1, .2, fab, x, backH - .1, bz + .06, .07), -.05));             // 头枕
+        const x = -w/2 + a + cw/2 + i*cw, sd = d - bk - .04;
+        // 坐垫：下段前脸 + 上段软垫，前沿有包边
+        g.add(rbox(cw - .014, .24, sd, lm, x, ft + .05, Z(bk + .02 + sd/2), .05));
+        g.add(rbox(cw - .014, .16, sd - .01, lm, x, sh - .16, Z(bk + .02 + sd/2), .08));
+        { const pp = cyl(.007, .007, cw - .09, seam, 0, 0, 0, 8); pp.rotation.z = Math.PI/2; pp.position.set(x, sh - .085, Z(bk + .02 + sd) - .004); g.add(pp); }
+        // 靠背：腰枕 + 上段，各带横向车缝和一颗拉扣
+        const back = new THREE.Group(); back.position.set(x, sh - .02, Z(bk + .02)); back.rotation.x = -.13;
+        back.add(rbox(cw - .03, .2, .2, lm, 0, 0, .1, .08), rbox(cw - .03, .26, .17, lm, 0, .2, .085, .08));
+        back.add(box(cw - .1, .004, .004, seam, 0, .2, .2));
+        back.add(blob(.012, .009, .012, ld, 0, .33, .17, 10));
+        g.add(back);
+        // 头枕：圆润的独立枕，略前倾，两条装饰线
+        const head = new THREE.Group(); head.position.set(x, .8, Z(.08)); head.rotation.x = -.06;
+        head.add(rbox(cw - .05, .24, .2, lm, 0, 0, 0, .09));
+        head.add(box(cw - .14, .004, .004, seam, 0, .12, .1));
+        g.add(head);
       }
+      break;
+    }
+    case 'sledtable': {         // 北欧拼板实木餐桌：圆角厚桌面（柔和倒边）+ 两端双圆柱腿立在两头收尖的雪橇地脚上
+      const T = (f.h ?? 700)/1000, c0 = c || '#d9a86c', wm = staveWood(c0), wd = woodM(darker(c0, .97)), th = .03;
+      const top = mesh(new THREE.ExtrudeGeometry(rrect(w - .016, d - .016, .07), {depth:th - .012, bevelEnabled:true, bevelThickness:.006, bevelSize:.008, bevelSegments:4, curveSegments:16}), wm);
+      top.geometry.rotateX(-Math.PI/2); top.position.y = T - th + .006; g.add(top);
+      g.add(rbox(w - .5, .06, d - .14, wd, 0, T - th - .06, 0, .01));                                             // 桌面下的框
+      [-1, 1].forEach(s => {
+        const x = s*(w/2 - .3), sled = new THREE.Shape(), L = d - .02;
+        sled.moveTo(-L/2, 0); sled.lineTo(L/2, 0); sled.quadraticCurveTo(L/2 + .005, .012, L/2 - .06, .03); sled.lineTo(-L/2 + .06, .03); sled.quadraticCurveTo(-L/2 - .005, .012, -L/2, 0);
+        const sg = new THREE.ExtrudeGeometry(sled, {depth:.05, bevelEnabled:true, bevelThickness:.004, bevelSize:.004, bevelSegments:2}); sg.translate(0, 0, -.025); sg.rotateY(Math.PI/2);
+        const sm = mesh(sg, wd); sm.position.set(x, 0, 0); g.add(sm);
+        [-1, 1].forEach(t => g.add(cyl(.019, .024, T - th - .06 - .03, wd, x, .03, t*.12, 20)));
+        g.add(rbox(.05, .05, d - .2, wd, x, T - th - .11, 0, .012));                                             // 腿顶横档
+      });
       break;
     }
     case 'trestle': {           // 和风厚板餐桌：厚桌面 + 两端 T 形脚 + 横撑（如 Nitori ヤマト）
@@ -2648,14 +2722,37 @@ function buildFurniture(f){
       g.add(rbox(tvw, th, .025, mat('#18181a', {roughness:.4, metalness:.3}), 0, yc - th/2, -d*.1 + .05, .004), box(tvw - .016, th - .022, .002, screenMat('#1f2b3a'), 0, yc - th/2 + .011, -d*.1 + .064));
       break;
     }
-    case 'massage': {           // 按摩椅（面朝 +z），可躺
-      const cm = mat(c || '#9a6a45', {roughness:.45}), dk = mat(darker(c || '#9a6a45', .7), {roughness:.5}), aw = Math.min(.2, w*.26), iw = w - 2*aw;
-      g.add(rbox(w*.9, .14, d*.7, dk, 0, 0, -d*.05, .04));
-      [-1, 1].forEach(s => g.add(rbox(aw, .62, d*.62, cm, s*(w/2 - aw/2), .1, -d*.06, .09)));
-      g.add(rbox(iw, .16, d*.48, cm, 0, .36, -d*.02, .06));
-      g.add(rot(rbox(iw + .04, 1.0, .26, cm, 0, .4, bz + .22, .1), -.32));
-      g.add(rot(rbox(iw - .02, .5, .16, dk, 0, .08, d/2 - .2, .06), .55));
-      g.add(rbox(iw*.7, .12, .14, mat('#efe6d6', {roughness:.6}), 0, 1.18, bz + .02, .05));
+    case 'massage': {           // 按摩椅（面朝 +z）：弧形侧壳（内含手臂气囊）、通道式靠背、头枕、肩部气囊翼、坐垫、小腿足部按摩器、侧边控制屏
+      const C = c || '#2b2725', lm = leatherMat(C, {rough:.45}), shell = leatherMat(darker(C, .9), {rough:.38, coat:.5}), acc = mat('#5a5652', {roughness:.35, metalness:.4});
+      const trim = mat('#b9b6b0', {metalness:.85, roughness:.25}), iw = w - .3, back = -d/2;
+      // 侧壳：侧面轮廓挤出（后高前低，扶手向前延伸后圆滑下落）
+      [-1, 1].forEach(s => {
+        const sh = new THREE.Shape(), z0 = back + .02;
+        sh.moveTo(z0 + .08, .06); sh.lineTo(z0 + .02, .7); sh.quadraticCurveTo(z0, 1.02, z0 + .16, 1.06); sh.quadraticCurveTo(z0 + .3, 1.08, z0 + .32, .95);
+        sh.quadraticCurveTo(z0 + .34, .72, z0 + .5, .66); sh.lineTo(z0 + .86, .64); sh.quadraticCurveTo(z0 + .95, .63, z0 + .94, .52); sh.quadraticCurveTo(z0 + .9, .25, z0 + .76, .06); sh.lineTo(z0 + .08, .06);
+        const geo = new THREE.ExtrudeGeometry(sh, {depth:.11, bevelEnabled:true, bevelThickness:.025, bevelSize:.025, bevelSegments:5, curveSegments:24});
+        geo.rotateY(-Math.PI/2); const m = mesh(geo, shell); m.position.x = s > 0 ? w/2 - .025 : -w/2 + .135; g.add(m);
+        g.add(rbox(.07, .2, .5, lm, s*(iw/2 - .02), .5, back + .62, .04));                                    // 手臂气囊（内侧软垫）
+        g.add(rbox(.012, .012, .5, trim, s*(w/2 - .02), .66, back + .64, .005));                                // 扶手金属饰条
+      });
+      g.add(rbox(w - .06, .08, d*.55, acc, 0, 0, back + d*.3, .03));                                           // 底座
+      g.add(rbox(iw + .02, .14, .5, lm, 0, .36, back + .55, .06));                                              // 坐垫
+      // 靠背：后倾 16°，三条竖向通道软包 + 外框
+      const bk = new THREE.Group(); bk.position.set(0, .44, back + .3); bk.rotation.x = -.28; g.add(bk);
+      bk.add(rbox(iw + .04, .62, .1, shell, 0, 0, -.04, .04));
+      [-1, 0, 1].forEach(k => bk.add(rbox(iw/3 - .01, .58, .1, lm, k*iw/3, .02, .04, .045)));
+      [.15, .3, .45].forEach(y => bk.add(box(iw - .04, .004, .004, mat('#141312'), 0, y, .092)));
+      // 头枕 + 肩部气囊翼
+      const hd = new THREE.Group(); hd.position.set(0, 1.0, back + .14); hd.rotation.x = -.25; g.add(hd);
+      hd.add(rbox(iw*.62, .16, .12, lm, 0, 0, 0, .06));
+      [-1, 1].forEach(s => { const wg = rbox(.09, .26, .16, lm, s*(iw/2 - .03), -.18, .02, .05); wg.rotation.y = s*.35; hd.add(wg); });
+      // 小腿 + 足底按摩器：从坐垫前沿斜向下，两条腿槽
+      const leg = new THREE.Group(); leg.position.set(0, .42, back + .82); leg.rotation.x = .5; g.add(leg);
+      leg.add(rbox(iw - .02, .2, .44, shell, 0, -.2, .22, .05));
+      [-1, 1].forEach(s => leg.add(rbox(iw/2 - .06, .08, .4, mat('#151413', {roughness:.8}), s*iw/4, -.01, .23, .03)));
+      leg.add(rbox(iw - .06, .06, .12, lm, 0, -.03, .44, .03));
+      // 右扶手前端的触控面板
+      const scr = box(.14, .006, .09, screenMat('#2a4a6a'), w/2 - .09, .675, back + .85); scr.rotation.x = -.3; g.add(scr);
       break;
     }
     case 'globe': {             // 小号乳白玻璃吊灯（中岛上方）
