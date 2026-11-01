@@ -378,7 +378,7 @@ const NAMES_EN = {
   '洗衣机':'Washer', '洗衣池':'Laundry Sink', '电热水器':'Water Heater', '储物柜':'Storage Cabinet', '65 寸电视':'65" TV',
   '55 寸电视':'55" TV', '对开门冰箱':'French-door Fridge', '柜机空调':'Floor AC', '挂机空调':'Wall AC', '洗碗机':'Dishwasher',
   '蒸烤箱高柜':'Oven Tower', '烘干机':'Dryer', '空气净化器':'Air Purifier', '长书桌':'Long Desk', '办公椅':'Office Chair',
-  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '中古 L 形沙发':'Mid-century L Sofa', 'Y 形椅':'Wishbone Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '户外':'Outdoor', '树脂物置（小）':'Resin Shed (S)', '树脂物置（大）':'Resin Shed (L)', '轿车':'Car', '人工木平台':'Composite Deck', '布篷（可收）':'Retractable Awning', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
+  '大书架':'Large Bookshelf', '立式钢琴':'Upright Piano', '跑步机':'Treadmill', '阅读椅':'Reading Chair', '按摩椅':'Massage Chair', '中古 L 形沙发':'Mid-century L Sofa', 'Y 形椅':'Wishbone Chair', '移动电视架':'TV Cart', '灯具':'Lighting', '布艺吸顶灯':'Fabric Ceiling Light', '中古吊灯':'Mid-century Pendant', '小吊灯':'Mini Pendant', '宠物':'Pets', '户外':'Outdoor', '实物候选':'Shortlist', '树脂物置（小）':'Resin Shed (S)', '树脂物置（大）':'Resin Shed (L)', '轿车':'Car', '人工木平台':'Composite Deck', '布篷（可收）':'Retractable Awning', '大号猫砂盆':'Large Litter Box', '猫碗':'Cat Bowls', '猫爬架':'Cat Tree', '茶桌':'Tea Table', '休闲椅':'Lounge Chair',
 };
 const nm = s => LANG === 'en' ? (NAMES_EN[s] ?? s) : LANG === 'zht' ? s2t(s) : s;
 // 静态文案：元素上写 data-en / data-en-title，中文原文首次切换时存进 dataset
@@ -539,6 +539,14 @@ const LIB = [
     ['massage','按摩椅',750,1250,'#9a6a45'],['lsofa','中古 L 形沙发',2000,1500,'#c4a682'],['ychair','Y 形椅',550,520,'#d9c9ad'],['tvcart','移动电视架',1450,600,'#e9e4da']]},
   {cat:'灯具', items:[
     ['drum','布艺吸顶灯',600,600,'#f3eadb'],['pendant','中古吊灯',900,900,'#6b4a33'],['globe','小吊灯',220,220,'#6b4a33']]},
+  {cat:'实物候选', items:[
+    ['kboard','餐边柜 エルフ1800 浅木',1800,490,'#b4936f',{h:1970, tex:'elf1800'}],
+    ['kboard','餐边柜 灰褐石纹1600',1600,490,'#9a8a7c',{h:1970, tex:'gp1600'}],
+    ['kboard','餐边柜 カイト160 浅灰石纹',1610,510,'#cfc8bf',{h:1974, tex:'kite160'}],
+    ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
+    ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
+    ['trestle','餐桌 Nitori ヤマト160 深棕',1600,900,'#4e3322',{h:680}],
+    ['photorug','地毯 ヨーロピアン 200×250',2500,2000,'#ebe4d4',{tex:'sav01'}]]},
   {cat:'户外', items:[
     ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
@@ -771,6 +779,7 @@ function furnSVG(t,w,d,c){
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
     case 'art': return rc(x,y,w,d,c);
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
+    case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
     case 'kboard': return rc(x,y,w,d,c||'#b4936f') + ln(x,y+d-30,x+w,y+d-30,'stroke-width="6"');
     case 'photorug': return rc(x,y,w,d,c||'#e9e2d3','fill-opacity=".75"') + rc(x+80,y+80,w-160,d-160,'none','stroke-width="6" opacity=".6"');
     case 'cupboard': return rc(x,y,w,d,c||'#efe8dc') + ln(x,y+d*.5,x+w,y+d*.5,DASH);
@@ -1147,7 +1156,8 @@ function pushOut(f){
   }
 }
 function addItem(it, x, y){
-  const [type,name,w,d,color] = it, f = F(type,name,Math.round(x/10)*10,Math.round(y/10)*10,w,d,0,color);
+  const [type,name,w,d,color,extra] = it, f = F(type,name,Math.round(x/10)*10,Math.round(y/10)*10,w,d,0,color);
+  if (extra) Object.assign(f, extra);                 // 第 6 项：额外属性（高度、贴图等）
   pushOut(f);
   ui.sel = {kind:'furn', id:f.id};
   mutate(() => type==='rug' ? state.furniture.unshift(f) : state.furniture.push(f));
@@ -2485,6 +2495,16 @@ function buildFurniture(f){
       g.add(box(w - .04, .01, .02, glowMat('#fff7e6', '#ffe9c4', .8), 0, 1.375, fz - .06));
       break;
     }
+    case 'trestle': {           // 和风厚板餐桌：厚桌面 + 两端 T 形脚 + 横撑（如 Nitori ヤマト）
+      const T = (f.h ?? 680)/1000, wd = woodM(c || '#5a3b26'), ed = woodM(lighter(c || '#5a3b26', .18));
+      g.add(box(w, .04, d, wd, 0, T - .04, 0));
+      [-1, 1].forEach(s => g.add(box(.07, .045, d, ed, s*(w/2 - .035), T - .045, 0)));                 // 两端无垢材封边
+      [-1, 1].forEach(s => { const x = s*(w/2 - .28);
+        g.add(box(.09, .06, d - .1, wd, x, 0, 0), box(.07, T - .1, .2, wd, x, .06, 0), box(.07, .05, d - .2, wd, x, T - .095, 0)); });
+      g.add(box(w - .62, .09, .035, wd, 0, .2, 0));                                                        // 中间横撑
+      g.add(box(w*.4, .003, .32, fabric('#d9cdb8'), -w*.18, T, d*.2), box(w*.4, .003, .32, fabric('#d9cdb8'), w*.18, T, -d*.2));
+      break;
+    }
     case 'kboard': {            // 厨房收纳柜（正面用实物照片贴图）
       const h = (f.h ?? 1970)/1000, pm = photoMat(f.tex), body = mat(c || '#b4936f', {roughness:.6});
       g.add(box(w, h, d - .01, body, 0, 0, -.005));
@@ -2579,8 +2599,9 @@ function buildFurniture(f){
     case 'ovaltable': {         // 椭圆跑道形桌面 + 外撇斜腿
       const T = (f.h ?? 720)/1000, wd = woodM(c || '#b88a5e'), geo = new THREE.ExtrudeGeometry(rrect(w, d, d/2 - .002), {depth:.03, bevelEnabled:true, bevelThickness:.004, bevelSize:.004, bevelSegments:2, curveSegments:24});
       geo.rotateX(-Math.PI/2); const top = mesh(geo, wd); top.position.y = T - .034; g.add(top);
-      g.add(rbox(w - d*.6, .05, d*.5, woodM(darker(c || '#b88a5e', .9)), 0, T - .085, 0, .01));
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(rod([a*(w/2 - d*.28), 0, b*(d/2 - .1)], [a*(w/2 - d*.38), T - .085, b*(d/2 - .17)], .014, wd, .024)));
+      g.add(rbox(w - d*.6, .05, d*.5, f.legs ? mat(f.legs, {roughness:.45, metalness:.5}) : woodM(darker(c || '#b88a5e', .9)), 0, T - .085, 0, .01));
+      const lm = f.legs ? mat(f.legs, {roughness:.45, metalness:.5}) : wd;      // f.legs：金属腿颜色（如黑色钢腿）
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(rod([a*(w/2 - d*.28), 0, b*(d/2 - .1)], [a*(w/2 - d*.38), T - .085, b*(d/2 - .17)], .014, lm, .024)));
       g.add(box(w*.55, .003, .32, fabric('#c9b79c'), 0, T, 0));
       [-1, 1].forEach(s => { g.add(box(.36, .003, .26, fabric('#efe6d6'), s*w*.22, T, d*.12)); plate(g, .11, s*w*.22, T + .003, d*.12); });
       vase(g, 0, T + .003, -.05, .055, .2, '#e9e2d6', R);
