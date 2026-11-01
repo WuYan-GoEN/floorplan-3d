@@ -547,7 +547,7 @@ const LIB = [
     ['kboard','餐边柜 ニトリ リガーレ160 白（无上置き）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
     ['sledtable','餐桌 原木雪橇脚 150×80',1500,800,'#d9a86c',{h:700}],
     ['massage','按摩椅 フジ医療器 M25 AS-R710',690,1330,'#2b2725'],
-    ['recliner','电动沙发 2人 浅灰',1800,980,'#d6d1c8'],
+    ['recliner','电动沙发 2人 ニトリ 皮革',1800,980,'#8f7260',{leather:true}],
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
     ['trestle','餐桌 Nitori ヤマト160 深棕',1600,900,'#4e3322',{h:680}],
     ['photorug','地毯 ヨーロピアン 200×250',2500,2000,'#ebe4d4',{tex:'sav01'}]]},
@@ -2508,27 +2508,24 @@ function buildFurniture(f){
       if (f.lights) for (let i = 0; i < f.lights; i++) g.add(cyl(.05, .05, .006, glowMat('#fff8ea', '#ffe8c0', .9), 0, y0 - .004, -d/2 + d*(i + .5)/f.lights, 20));
       break;
     }
-    case 'recliner': {          // 电动躺椅沙发：粗扶手（带杯架）+ 高靠背 + 头枕
-      const fab = f.leather ? mat(c || '#d6d1c8', {roughness:.42}) : fabric(c || '#d6d1c8'), dk = f.leather ? mat(darker(c || '#d6d1c8', .88), {roughness:.45}) : fabric(darker(c || '#d6d1c8', .9)), n = Math.max(1, Math.round((w - .5)/.62)), a = .25, cw = (w - 2*a)/n, bd = .26, lh = .05;
-      g.add(rbox(w, .3, d, dk, 0, lh, 0, .05));
-      [-1, 1].forEach(s => { g.add(rbox(a, .62, d - .02, fab, s*(w/2 - a/2), lh, .01, .08)); g.add(cyl(.035, .035, .01, mat('#9a9a98', {roughness:.3, metalness:.7}), s*(w/2 - a/2), lh + .62, d/2 - .18, 18)); });
+    case 'recliner': {          // 电动沙发（ニトリ款）：方正宽扶手带杯架、短黑脚、两段式靠背 + 独立头枕、坐垫前脸分缝
+      const C = c || '#8f7260', L = f.leather !== false;
+      const fab = L ? mat(C, {roughness:.38}) : fabric(C), dk = L ? mat(darker(C, .9), {roughness:.4}) : fabric(darker(C, .9));
+      const n = Math.max(1, Math.round((w - .5)/.66)), a = .22, cw = (w - 2*a)/n, ft = .05, sh = .45, bk = .18, backH = .9, headH = 1.03;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => g.add(box(.05, ft, .05, mat('#1c1b1a', {roughness:.5}), x*(w/2 - .08), 0, z*(d/2 - .08))));
+      g.add(rbox(w - .1, .1, d - .12, dk, 0, ft, -.02, .02));
+      [-1, 1].forEach(s => {
+        g.add(rbox(a, .62 - ft, d, fab, s*(w/2 - a/2), ft, 0, .05));
+        g.add(cyl(.04, .04, .012, mat('#2a2928', {roughness:.4}), s*(w/2 - a/2), .62, d/2 - .2, 20));
+      });
+      g.add(rbox(w - 2*a + .02, backH - ft, bk, dk, 0, ft, bz + bk/2, .04));
       for (let i = 0; i < n; i++){
-        const x = -w/2 + a + cw/2 + i*cw;
-        g.add(rbox(cw - .01, .17, d - bd - .03, fab, x, lh + .3, bz + bd + (d - bd)/2, .07));
-        g.add(rot(rbox(cw - .03, .56, bd, fab, x, lh + .32, bz + bd/2 + .02, .08), -.1));
-        g.add(rot(rbox(cw - .08, .22, .16, fab, x, lh + .84, bz + .1, .07), -.12));          // 头枕
-        g.add(cyl(.012, .012, .01, dk, x, lh + .62, bz + bd + .005, 8).rotateX(Math.PI/2));
+        const x = -w/2 + a + cw/2 + i*cw, sd = d - bk - .02;
+        g.add(rbox(cw - .01, sh - ft - .05, sd, fab, x, ft + .04, bz + bk + sd/2, .05));                          // 坐垫（前脸几乎到地）
+        g.add(rot(rbox(cw - .02, backH - sh + .02, .2, fab, x, sh - .02, bz + bk + .04, .07), -.07));            // 靠背垫
+        g.add(cyl(.012, .012, .01, dk, x, sh + (backH - sh)*.55, bz + bk + .145, 10).rotateX(Math.PI/2));
+        g.add(rot(rbox(cw - .04, headH - backH + .1, .2, fab, x, backH - .1, bz + .06, .07), -.05));             // 头枕
       }
-      break;
-    }
-    case 'sledtable': {         // 北欧原木餐桌：圆角厚桌面 + 两端双圆柱腿立在雪橇形地脚上
-      const T = (f.h ?? 700)/1000, wd = woodM(c || '#d9a86c');
-      const geo = new THREE.ExtrudeGeometry(rrect(w, d, .06), {depth:.03, bevelEnabled:true, bevelThickness:.006, bevelSize:.006, bevelSegments:2, curveSegments:12});
-      geo.rotateX(-Math.PI/2); const top = mesh(geo, wd); top.position.y = T - .036; g.add(top);
-      [-1, 1].forEach(s => { const x = s*(w/2 - .3);
-        g.add(rbox(.05, .035, d - .06, wd, x, 0, 0, .015), box(.05, .06, d - .2, wd, x, T - .095, 0));
-        [-1, 1].forEach(t => g.add(cyl(.022, .022, T - .07, wd, x, .035, t*.11, 16))); });
-      g.add(box(.36, .003, .26, fabric('#e9e3d6'), -w*.22, T, d*.18), box(.36, .003, .26, fabric('#e9e3d6'), w*.22, T, -d*.18));
       break;
     }
     case 'trestle': {           // 和风厚板餐桌：厚桌面 + 两端 T 形脚 + 横撑（如 Nitori ヤマト）
