@@ -2509,7 +2509,7 @@ function buildFurniture(f){
       break;
     }
     case 'recliner': {          // 电动躺椅沙发：粗扶手（带杯架）+ 高靠背 + 头枕
-      const fab = fabric(c || '#d6d1c8'), dk = fabric(darker(c || '#d6d1c8', .9)), n = Math.max(1, Math.round((w - .5)/.62)), a = .25, cw = (w - 2*a)/n, bd = .26, lh = .05;
+      const fab = f.leather ? mat(c || '#d6d1c8', {roughness:.42}) : fabric(c || '#d6d1c8'), dk = f.leather ? mat(darker(c || '#d6d1c8', .88), {roughness:.45}) : fabric(darker(c || '#d6d1c8', .9)), n = Math.max(1, Math.round((w - .5)/.62)), a = .25, cw = (w - 2*a)/n, bd = .26, lh = .05;
       g.add(rbox(w, .3, d, dk, 0, lh, 0, .05));
       [-1, 1].forEach(s => { g.add(rbox(a, .62, d - .02, fab, s*(w/2 - a/2), lh, .01, .08)); g.add(cyl(.035, .035, .01, mat('#9a9a98', {roughness:.3, metalness:.7}), s*(w/2 - a/2), lh + .62, d/2 - .18, 18)); });
       for (let i = 0; i < n; i++){
