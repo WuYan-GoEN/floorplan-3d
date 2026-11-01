@@ -5,7 +5,10 @@
 """
 import json, re, sys, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
-*srcs, out = sys.argv[1:]
+args = sys.argv[1:]
+tex = None
+if '--tex' in args: i = args.index('--tex'); tex = args[i+1]; del args[i:i+2]   # 可选：照片贴图库（不入库，只进单文件版）
+*srcs, out = args
 assert srcs and out.endswith('.html'), __doc__
 plans = [json.loads(pathlib.Path(p).read_text(encoding='utf8')) for p in srcs]
 for p in plans: assert p.get('floors'), f'{p.get("id")} 缺少 floors'
@@ -20,6 +23,9 @@ blob = json.dumps(data, ensure_ascii=False).replace('</', '<\\/')
 html, n = re.subn(r'<script type="application/json" id="planData"[^>]*>.*?</script>',
                   lambda m: f'<script type="application/json" id="planData" {attr}>{blob}</script>', html, count=1, flags=re.S)
 assert n == 1, '在 index.html 里没找到 #planData'
+if tex:
+    tblob = pathlib.Path(tex).read_text(encoding='utf8').replace('</', '<\\/')
+    html = html.replace('<script type="application/json" id="planData"', f'<script type="application/json" id="photoTex">{tblob}</script>\n<script type="application/json" id="planData"', 1)
 html = re.sub(r'<title>.*?</title>', f'<title>{plans[0].get("title") or "户型"}</title>', html, count=1)
 pathlib.Path(out).write_text(html, encoding='utf8')
 print(f'已生成 {out}（{len(html)//1024} KB，{len(plans)} 个方案）')

@@ -408,6 +408,11 @@ const EMBED_ONLY = document.getElementById('planData')?.dataset.only === '1';   
 // 单文件多方案版：{"index":{default,plans:[…]}, "plans":{id:户型}}，用 #<id> 切换
 const EMBED_MULTI = (() => { const el = document.getElementById('planData'); if (el?.dataset.multi !== '1') return null; try { return JSON.parse(el.textContent); } catch(e) { return null; } })();
 const PLAN_INDEX = EMBED_MULTI ? EMBED_MULTI.index : !EMBED_ONLY && location.protocol.startsWith('http') ? fetchJSONSync('plans/index.json') : null;
+const PHOTO_TEX = (() => {
+  const el = document.getElementById('photoTex');
+  if (el) try { return JSON.parse(el.textContent); } catch(e) {}
+  return (!EMBED_ONLY && !EMBED_MULTI && location.protocol.startsWith('http') && fetchJSONSync('plans/photo_tex.json')) || {};
+})();
 const PLAN = (() => {
   if (EMBED_MULTI){ const h = location.hash.slice(1); return EMBED_MULTI.plans[h] || EMBED_MULTI.plans[EMBED_MULTI.index.default] || Object.values(EMBED_MULTI.plans)[0]; }
   const want = EMBED_ONLY ? null : PLAN_ID_PARAM || PLAN_INDEX?.default;
@@ -766,6 +771,8 @@ function furnSVG(t,w,d,c){
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
     case 'art': return rc(x,y,w,d,c);
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
+    case 'kboard': return rc(x,y,w,d,c||'#b4936f') + ln(x,y+d-30,x+w,y+d-30,'stroke-width="6"');
+    case 'photorug': return rc(x,y,w,d,c||'#e9e2d3','fill-opacity=".75"') + rc(x+80,y+80,w-160,d-160,'none','stroke-width="6" opacity=".6"');
     case 'cupboard': return rc(x,y,w,d,c||'#efe8dc') + ln(x,y+d*.5,x+w,y+d*.5,DASH);
     default: return rc(x,y,w,d,c);
   }
@@ -1849,6 +1856,16 @@ function floorMat(kind){
   return floorMats[kind] = new THREE.MeshStandardMaterial({map:t, roughness:s.rough});
 }
 
+const photoMats = {};
+function photoMat(key, o = {}){                 // 用户照片做的贴图（家具正面、地毯面）
+  if (!PHOTO_TEX[key]) return null;
+  if (!photoMats[key]){
+    const t = new THREE.TextureLoader().load(PHOTO_TEX[key], () => { try { startLoop(); } catch(e) {} });
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    photoMats[key] = new THREE.MeshStandardMaterial({map:t, roughness:o.rough ?? .7, emissive:'#ffffff', emissiveMap:t, emissiveIntensity:o.glow ?? .28});   // 照片本身带了光照，补一点自发光免得显暗
+  }
+  return photoMats[key];
+}
 /* ======================= 几何小工具（y = 底面高度） ======================= */
 const asMat = m => typeof m === 'string' ? mat(m) : m;
 const sh = o => { o.castShadow = o.receiveShadow = true; return o; };
@@ -2466,6 +2483,18 @@ function buildFurniture(f){
       g.add(box(.26, .32, .3, mat('#2b2b2d', {roughness:.4, metalness:.4}), -w*.25, .88, -.02), box(.2, .1, .2, '#c9c2b6', w*.2, .88, 0), cyl(.04, .035, .1, ceramic(), w*.2 - .05, .98, 0, 16));
       g.add(box(w, .02, d, wd, 0, 1.38)); g.add(box(w, .78, d - .02, cm, 0, 1.4, -.01)); fronts(g, -w/2, 1.4, w, .78, fz, n, 1, cm, 'bar', 1.45);
       g.add(box(w - .04, .01, .02, glowMat('#fff7e6', '#ffe9c4', .8), 0, 1.375, fz - .06));
+      break;
+    }
+    case 'kboard': {            // 厨房收纳柜（正面用实物照片贴图）
+      const h = (f.h ?? 1970)/1000, pm = photoMat(f.tex), body = mat(c || '#b4936f', {roughness:.6});
+      g.add(box(w, h, d - .01, body, 0, 0, -.005));
+      if (pm){ const fr = new THREE.Mesh(new THREE.PlaneGeometry(w, h), pm); fr.position.set(0, h/2, d/2 + .001); g.add(fr); }
+      break;
+    }
+    case 'photorug': {          // 地毯（面用实物照片贴图）
+      const pm = photoMat(f.tex, {rough:1});
+      const base = box(w, .008, d, mat(c || '#e9e2d3', {roughness:1}), 0, 0); base.castShadow = false; g.add(base);
+      if (pm){ const t = new THREE.Mesh(new THREE.PlaneGeometry(w, d), pm); t.rotation.x = -Math.PI/2; t.position.y = .0095; t.receiveShadow = true; g.add(t); }
       break;
     }
     case 'rugmc': {             // 中古风地毯：奶油底 + 棕色边框 + 圆点

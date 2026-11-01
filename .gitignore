@@ -23,3 +23,4 @@ tmp/
 # 环境变量
 .env
 .env.*
+plans/photo_tex.json
