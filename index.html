@@ -549,6 +549,9 @@ const LIB = [
     ['dchairarm','餐椅 原木扶手 浅灰',540,540,'#cfcbc2',{frame:'#d9a86c'}],
     ['paperlamp','和纸吊灯 AKARI 风',450,450,'#f8f2e6',{h:450, drop:700}],
     ['plainrug','素色地毯 燕麦色 200×250',2500,2000,'#d4ccbf'],
+    ['texrug','ギャッベ 苔绿 200×250（羊毛手织）',2500,2000,'#6d6f4a',{pattern:'gabbeh', fringe:true}],
+    ['texrug','炭灰短毛地毯 170×240',2400,1700,'#55575a',{pattern:'heather'}],
+    ['texrug','摩卡菱格地毯 200×250',2500,2000,'#8a6f58',{pattern:'berber'}],
     ['massage','按摩椅 フジ医療器 M25 AS-R710',690,1330,'#2b2725'],
     ['recliner','电动沙发 2人 ニトリ 皮革',1800,980,'#8f7260',{leather:true}],
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
@@ -790,6 +793,7 @@ function furnSVG(t,w,d,c){
     case 'recliner': { const a = 250; return rc(x,y,w,d,c||'#d6d1c8','rx="80"') + rc(x+a,y,w-2*a,260,shade(c||'#d6d1c8',.85)) + ln(0,y+260,0,y+d,DASH); }
     case 'paperlamp': return ec(0,0,w/2,d/2,'none','stroke-dasharray="30 20" stroke-width="6"') + ec(0,0,w*.12,d*.12,'#1d1d1d');
     case 'dchairarm': return rc(x,y,w,d,c||'#cfcbc2','rx="60"') + rc(x,y,w,90,'#d9a86c') + rc(x,y,40,d,'#d9a86c') + rc(x+w-40,y,40,d,'#d9a86c');
+    case 'texrug': return rc(x,y,w,d,c||'#6f7356','rx="30" fill-opacity=".85"') + rc(x+60,y+60,w-120,d-120,'none','stroke-dasharray="20 14" opacity=".5"');
     case 'plainrug': return rc(x,y,w,d,c||'#d4ccbf','rx="40" fill-opacity=".8"');
     case 'sledtable': return rc(x,y,w,d,c||'#d9a86c','rx="60"') + ln(x+300,y+40,x+300,y+d-40,DASH) + ln(x+w-300,y+40,x+w-300,y+d-40,DASH);
     case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
@@ -1984,6 +1988,38 @@ function staveWood(c){
   const m = new THREE.MeshStandardMaterial({map:t, roughness:.48}); if (envTex){ m.envMap = envTex; m.envMapIntensity = .35; }
   _wm.set(c, m); return m;
 }
+// 地毯花纹贴图：gabbeh（手织羊毛、斑驳底色 + 稀疏小图案）、heather（混色短毛）、berber（菱形线条）
+const _rugT = new Map();
+function rugTex(kind, c, w, d){
+  const key = kind + c + w + d; if (_rugT.has(key)) return _rugT.get(key);
+  const W = 1024, Hh = Math.round(1024*d/w), cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const g = cv.getContext('2d');
+  const base = new THREE.Color(c); let sd = 11; const R = () => (sd = (sd*16807) % 2147483647)/2147483647;
+  const col = (k, dh = 0) => { const q = base.clone(); q.offsetHSL(dh, 0, 0); q.multiplyScalar(k); return '#' + q.getHexString(); };
+  g.fillStyle = col(1); g.fillRect(0, 0, W, Hh);
+  if (kind === 'gabbeh'){
+    for (let y = 0; y < Hh; y += 3){ g.fillStyle = col(.86 + R()*.26, (R() - .5)*.02); g.globalAlpha = .55; g.fillRect(0, y, W, 3 + R()*4); }   // 横向织纹深浅（abrash）
+    g.globalAlpha = 1;
+    for (let k = 0; k < 9000; k++){ g.fillStyle = col(.75 + R()*.5); g.globalAlpha = .35; g.fillRect(R()*W, R()*Hh, 2, 2); }
+    g.globalAlpha = 1;
+    const mot = ['#efe6d2', '#b4693e', '#d9b56a', '#3f3a2e'];
+    for (let k = 0; k < 22; k++){                                           // 小树 / 小动物 / 方块等手织图案
+      const x = 80 + R()*(W - 160), y = 60 + R()*(Hh - 120), m = mot[k % mot.length], t = k % 3, s = 10 + R()*8; g.fillStyle = m;
+      if (t === 0){ g.fillRect(x, y, s*.6, s*2.4); for (let i = 0; i < 4; i++) g.fillRect(x - s*.8 + i*s*.1, y + i*s*.5, s*2.2 - i*s*.2, s*.35); }
+      else if (t === 1){ g.fillRect(x, y, s*2, s*.8); g.fillRect(x + s*.2, y + s*.8, s*.3, s*.8); g.fillRect(x + s*1.5, y + s*.8, s*.3, s*.8); g.fillRect(x + s*1.8, y - s*.5, s*.4, s*.6); }
+      else { for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) if ((i + j) % 2 === 0) g.fillRect(x + i*s*.6, y + j*s*.6, s*.55, s*.55); }
+    }
+    g.strokeStyle = col(.62); g.lineWidth = 14; g.strokeRect(7, 7, W - 14, Hh - 14);
+  } else if (kind === 'heather'){
+    for (let k = 0; k < 60000; k++){ g.fillStyle = col(.7 + R()*.6); g.globalAlpha = .5; g.fillRect(R()*W, R()*Hh, 1.5, 1.5); }
+    g.globalAlpha = 1; g.strokeStyle = col(.8); g.lineWidth = 6; g.strokeRect(3, 3, W - 6, Hh - 6);
+  } else if (kind === 'berber'){
+    for (let k = 0; k < 30000; k++){ g.fillStyle = col(.85 + R()*.3); g.globalAlpha = .4; g.fillRect(R()*W, R()*Hh, 2, 2); }
+    g.globalAlpha = .7; g.strokeStyle = col(.72); g.lineWidth = 2.2; const s = 120;
+    for (let y = -s; y < Hh + s; y += s) for (let x = -s; x < W + s; x += s*1.4){ g.beginPath(); g.moveTo(x, y + s/2); g.lineTo(x + s*.7, y); g.lineTo(x + s*1.4, y + s/2); g.lineTo(x + s*.7, y + s); g.closePath(); g.stroke(); }
+    g.globalAlpha = 1;
+  }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; _rugT.set(key, t); return t;
+}
 const glowMat = (c = '#fff4dc', e = '#ffdca0', k = .5) => mat(c, {emissive:e, emissiveIntensity:k, roughness:.9, side:THREE.DoubleSide});
 
 // 拉手：y 为拉手中心，z 为门板正面
@@ -2614,6 +2650,12 @@ function buildFurniture(f){
         g.add(rod([a*(w/2 - .04), sy - .02, d/2 - .09], [a*(w/2 - .035), .64, d/2 - .1], .013, wd, .015));
       });
       g.add(rot(rbox(w - .1, .3, .05, up, 0, .5, bz + .05, .02), -.12));                                     // 靠背软包
+      break;
+    }
+    case 'texrug': {            // 有织纹 / 图案的地毯，f.pattern = gabbeh | heather | berber，f.fringe 两端流苏
+      const m = new THREE.MeshStandardMaterial({map:rugTex(f.pattern || 'heather', c || '#6f7356', w, d), roughness:1});
+      const r = new THREE.Mesh(new THREE.BoxGeometry(w, .014, d), m); r.position.y = .008; r.receiveShadow = true; g.add(r);
+      if (f.fringe){ const fm = mat('#e9e0cc', {roughness:1}); [-1, 1].forEach(s => { for (let i = 0; i < Math.floor(d/.03); i++) g.add(box(.06, .003, .008, fm, s*(w/2 + .03), .002, -d/2 + .015 + i*.03)); }); }
       break;
     }
     case 'plainrug': {          // 素色短毛地毯：圆角、带一点织纹
