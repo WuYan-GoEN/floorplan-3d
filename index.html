@@ -546,6 +546,9 @@ const LIB = [
     ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
     ['kboard','餐边柜 ニトリ リガーレ160 白（无上置き）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
     ['sledtable','餐桌 原木雪橇脚 150×80',1500,800,'#d9a86c',{h:700}],
+    ['dchairarm','餐椅 原木扶手 浅灰',540,540,'#cfcbc2',{frame:'#d9a86c'}],
+    ['paperlamp','和纸吊灯 AKARI 风',450,450,'#f8f2e6',{h:450, drop:700}],
+    ['plainrug','素色地毯 燕麦色 200×250',2500,2000,'#d4ccbf'],
     ['massage','按摩椅 フジ医療器 M25 AS-R710',690,1330,'#2b2725'],
     ['recliner','电动沙发 2人 ニトリ 皮革',1800,980,'#8f7260',{leather:true}],
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
@@ -785,6 +788,9 @@ function furnSVG(t,w,d,c){
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
     case 'ceilpanel': return rc(x,y,w,d,'none','stroke-dasharray="60 40" stroke-width="8" opacity=".5"');
     case 'recliner': { const a = 250; return rc(x,y,w,d,c||'#d6d1c8','rx="80"') + rc(x+a,y,w-2*a,260,shade(c||'#d6d1c8',.85)) + ln(0,y+260,0,y+d,DASH); }
+    case 'paperlamp': return ec(0,0,w/2,d/2,'none','stroke-dasharray="30 20" stroke-width="6"') + ec(0,0,w*.12,d*.12,'#1d1d1d');
+    case 'dchairarm': return rc(x,y,w,d,c||'#cfcbc2','rx="60"') + rc(x,y,w,90,'#d9a86c') + rc(x,y,40,d,'#d9a86c') + rc(x+w-40,y,40,d,'#d9a86c');
+    case 'plainrug': return rc(x,y,w,d,c||'#d4ccbf','rx="40" fill-opacity=".8"');
     case 'sledtable': return rc(x,y,w,d,c||'#d9a86c','rx="60"') + ln(x+300,y+40,x+300,y+d-40,DASH) + ln(x+w-300,y+40,x+w-300,y+d-40,DASH);
     case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
     case 'kboard': return rc(x,y,w,d,c||'#b4936f') + ln(x,y+d-30,x+w,y+d-30,'stroke-width="6"');
@@ -2585,6 +2591,34 @@ function buildFurniture(f){
         head.add(box(cw - .14, .004, .004, seam, 0, .12, .1));
         g.add(head);
       }
+      break;
+    }
+    case 'paperlamp': {         // 和纸灯笼吊灯（AKARI 风）：竹骨横向肋 + 和纸灯罩，黑色细线
+      const r = w/2, hh = (f.h ?? 450)/1000, y = H - (f.drop ?? 700)/1000, paper = glowMat('#f8f2e6', '#ffe1b0', .85);
+      g.add(rod([0, H, 0], [0, y + hh, 0], .003, mat('#1d1d1d')), cyl(.035, .035, .012, mat('#1d1d1d'), 0, H - .012, 0, 16));
+      const pts = []; for (let i = 0; i <= 16; i++){ const t = i/16; pts.push([r*Math.sin(Math.PI*(.06 + .88*t))*(f.shape === 'oval' ? 1 : .95), hh*t]); }
+      g.add(lathe(pts, paper, 0, y, 0, 48));
+      const rib = mat('#d9cdb8', {roughness:.8});
+      for (let i = 1; i < 16; i += 1){ const [rr, yy] = pts[i]; const t = new THREE.Mesh(new THREE.TorusGeometry(rr + .001, .0012, 4, 48), rib); t.rotation.x = Math.PI/2; t.position.y = y + yy; g.add(t); }
+      g.add(cyl(r*.12, r*.12, .02, mat('#1d1d1d'), 0, y + hh - .005, 0, 16), cyl(r*.18, r*.18, .006, mat('#1d1d1d'), 0, y - .003, 0, 16));
+      break;
+    }
+    case 'dchairarm': {         // 原木扶手餐椅（与雪橇脚餐桌同系列）：圆角木框 + 浅灰软包靠背与坐垫
+      const wd = woodM(f.frame || '#d9a86c'), up = leatherMat(c || '#cfcbc2', {rough:.6, coat:.1}), sy = .43;
+      [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(([a, b]) => g.add(rod([a*(w/2 - .04), 0, b*(d/2 - .05) + (b < 0 ? -.01 : .02)], [a*(w/2 - .05), sy - .02, b*(d/2 - .08)], .015, wd, .02)));
+      g.add(rbox(w - .06, .05, d - .08, wd, 0, sy - .07, 0, .012));
+      g.add(rbox(w - .1, .07, d - .1, up, 0, sy - .03, .01, .03));                                          // 坐垫
+      [-1, 1].forEach(a => {
+        g.add(rod([a*(w/2 - .04), sy - .02, bz + .05], [a*(w/2 - .045), .82, bz + .02], .016, wd, .018));     // 后腿延伸为靠背立柱
+        g.add(rbox(.04, .03, d - .12, wd, a*(w/2 - .03), .64, .0, .012));                                   // 扶手
+        g.add(rod([a*(w/2 - .04), sy - .02, d/2 - .09], [a*(w/2 - .035), .64, d/2 - .1], .013, wd, .015));
+      });
+      g.add(rot(rbox(w - .1, .3, .05, up, 0, .5, bz + .05, .02), -.12));                                     // 靠背软包
+      break;
+    }
+    case 'plainrug': {          // 素色短毛地毯：圆角、带一点织纹
+      const r = box(w, .012, d, fabric(c || '#d4ccbf'), 0, .001); r.castShadow = false; g.add(r);
+      const r2 = box(w - .04, .002, d - .04, fabric(lighter(c || '#d4ccbf', .06)), 0, .013); r2.castShadow = false; g.add(r2);
       break;
     }
     case 'sledtable': {         // 北欧拼板实木餐桌：圆角厚桌面（柔和倒边）+ 两端双圆柱腿立在两头收尖的雪橇地脚上
