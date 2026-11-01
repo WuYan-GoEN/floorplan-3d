@@ -544,7 +544,10 @@ const LIB = [
     ['kboard','餐边柜 灰褐石纹1600',1600,490,'#9a8a7c',{h:1970, tex:'gp1600'}],
     ['kboard','餐边柜 カイト160 浅灰石纹',1610,510,'#cfc8bf',{h:1974, tex:'kite160'}],
     ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
-    ['kboard','餐边柜 ニトリ リガーレ160 白（无上置き）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
+    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],
+    ['kboard','餐边柜 ニトリ リガーレ160 白（照片贴图）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
+    ['fridge','冰箱 Panasonic 六门 白',660,720,'#f6f6f3',{model:'pana6', h:1828}],
+    ['microwave','微波炉 SHARP 水波炉',487,400,'#f4f4f2'],['airfryer','空气炸锅 COSORI',260,340,'#efebe2'],['ricecooker','电饭煲 象印',255,345,'#f5f4f1'],
     ['sledtable','餐桌 原木雪橇脚 150×80',1500,800,'#d9a86c',{h:700}],
     ['dchairarm','餐椅 原木扶手 浅灰',540,540,'#cfcbc2',{frame:'#d9a86c'}],
     ['paperlamp','和纸吊灯 AKARI 风',450,450,'#f8f2e6',{h:450, drop:700}],
@@ -797,6 +800,8 @@ function furnSVG(t,w,d,c){
     case 'plainrug': return rc(x,y,w,d,c||'#d4ccbf','rx="40" fill-opacity=".8"');
     case 'sledtable': return rc(x,y,w,d,c||'#d9a86c','rx="60"') + ln(x+300,y+40,x+300,y+d-40,DASH) + ln(x+w-300,y+40,x+w-300,y+d-40,DASH);
     case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
+    case 'ligare': return rc(x,y,w,d,c||'#f1efea') + rc(x,y,w,d*.78,'#e9e6e0','opacity=".6"') + ln(x+400,y,x+400,y+d) + ln(x+1000,y,x+1000,y+d) + ln(x,y+d-25,x+w,y+d-25,'stroke-width="5"');
+    case 'microwave': case 'airfryer': case 'ricecooker': return rc(x,y,w,d,'#f4f4f2','rx="30"') + rc(x+20,y+d-50,w-40,40,'#222');
     case 'kboard': return rc(x,y,w,d,c||'#b4936f') + ln(x,y+d-30,x+w,y+d-30,'stroke-width="6"');
     case 'photorug': return rc(x,y,w,d,c||'#e9e2d3','fill-opacity=".75"') + rc(x+80,y+80,w-160,d-160,'none','stroke-width="6" opacity=".6"');
     case 'cupboard': return rc(x,y,w,d,c||'#efe8dc') + ln(x,y+d*.5,x+w,y+d*.5,DASH);
@@ -2020,6 +2025,41 @@ function rugTex(kind, c, w, d){
   }
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; _rugT.set(key, t); return t;
 }
+// 白色木纹（板式家具）：很淡的竖向木纹
+const _wg = new Map();
+function lightGrain(c){
+  if (_wg.has(c)) return _wg.get(c);
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d'); g.fillStyle = c; g.fillRect(0, 0, 256, 256);
+  let sd = 5; const R = () => (sd = (sd*16807) % 2147483647)/2147483647;
+  for (let i = 0; i < 70; i++){ g.strokeStyle = `rgba(150,130,105,${.03 + R()*.05})`; g.lineWidth = .5 + R()*1.5; g.beginPath(); const x = R()*256; g.moveTo(x, 0); for (let y = 0; y <= 256; y += 16) g.lineTo(x + Math.sin(y*.03 + i)*2, y); g.stroke(); }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2);
+  const m = new THREE.MeshStandardMaterial({map:t, roughness:.42}); if (envTex){ m.envMap = envTex; m.envMapIntensity = .3; } _wg.set(c, m); return m;
+}
+// 小家电（都朝 +z；x, y, z = 底面中心）
+function applMicrowave(g, x, y, z, w = .487, d = .4, h = .345){        // SHARP RE-SS10X 一类：白色机身 + 黑色门 + 银色把手 + 右侧操作面板
+  const wh = mat('#f4f4f2', {roughness:.35}), o = new THREE.Group(); o.position.set(x, y, z); g.add(o);
+  o.add(rbox(w, h, d, wh, 0, 0, 0, .02));
+  o.add(box(w*.98, h*.66, .006, mat('#151617', {roughness:.08, metalness:.3}), 0, h*.27, d/2 + .002));      // 门玻璃
+  o.add(rbox(w*.94, .028, .03, mat('#c8c9ca', {roughness:.25, metalness:.85}), 0, h*.86, d/2 + .012, .01));  // 门把手
+  o.add(box(w*.98, h*.22, .004, mat('#f7f7f5', {roughness:.5}), 0, .02, d/2 + .002));                       // 下方操作面板
+  o.add(box(.08, .03, .003, screenMat('#3a5a40'), w*.1, .07, d/2 + .005), cyl(.018, .018, .01, mat('#bfc0c1', {metalness:.8, roughness:.3}), w*.38, .09, d/2 + .007, 20).rotateX(Math.PI/2));
+  [-1, 1].forEach(s => o.add(cyl(.02, .02, .012, mat('#d6d6d4'), s*w*.4, -.01, d*.35, 10)));
+}
+function applAirFryer(g, x, y, z, w = .26, d = .34, h = .31){          // COSORI：奶白方圆机身、黑色顶面、前抽篮 + 竖把手
+  const cr = mat('#efebe2', {roughness:.45}), o = new THREE.Group(); o.position.set(x, y, z); g.add(o);
+  o.add(rbox(w, h*.55, d, cr, 0, 0, 0, .05), rbox(w, h*.45, d, cr, 0, h*.55, 0, .05));
+  o.add(box(w*.95, .004, d*.95, mat('#1a1a1a', {roughness:.15}), 0, h - .002, 0));
+  o.add(box(w*.98, .006, .006, mat('#d8d3c8'), 0, h*.55, d/2));
+  o.add(rbox(.035, h*.4, .03, cr, 0, h*.08, d/2 + .02, .012), box(.03, .012, .03, mat('#1a1a1a'), 0, h*.48, d/2 + .015));
+  o.add(cyl(.035, .035, .002, mat('#e3ddd1'), 0, h*.75, d/2 + .001, 28).rotateX(Math.PI/2));
+}
+function applRiceCooker(g, x, y, z, w = .255, d = .345, h = .215){      // 象印 IH 电饭煲：白色圆角机身、银色顶、前面操作面板、提手
+  const wh = mat('#f5f4f1', {roughness:.35}), o = new THREE.Group(); o.position.set(x, y, z); g.add(o);
+  o.add(rbox(w, h*.82, d, wh, 0, 0, 0, .06));
+  o.add(blob(w*.48, h*.14, d*.46, wh, 0, h*.8, -.005, 24));
+  o.add(box(w*.7, h*.25, .004, mat('#e4e1da', {roughness:.4}), 0, h*.4, d/2 - .002), box(.06, .025, .003, screenMat('#3a4a3a'), -.03, h*.55, d/2 + .001), box(.035, .02, .004, mat('#e08a3a'), .06, h*.55, d/2 + .001));
+  const hd = new THREE.Mesh(new THREE.TorusGeometry(w*.42, .007, 8, 24, Math.PI), mat('#d9d7d2')); hd.position.set(0, h*.82, 0); g.add(hd); hd.position.add(o.position);
+}
 const glowMat = (c = '#fff4dc', e = '#ffdca0', k = .5) => mat(c, {emissive:e, emissiveIntensity:k, roughness:.9, side:THREE.DoubleSide});
 
 // 拉手：y 为拉手中心，z 为门板正面
@@ -2316,6 +2356,18 @@ function buildFurniture(f){
       break;
     }
     case 'fridge': {
+      if (f.model === 'pana6'){   // Panasonic 六门：上部对开门 + 两个小抽屉并排 + 两层大抽屉，白色玻璃面、无外露拉手
+        const h = (f.h ?? 1828)/1000, gm = new THREE.MeshPhysicalMaterial({color:c || '#f6f6f3', roughness:.12, clearcoat:.8, clearcoatRoughness:.08}), side = mat('#efefec', {roughness:.35}), fz = d/2;
+        if (envTex){ gm.envMap = envTex; gm.envMapIntensity = .5; }
+        g.add(box(w - .02, .05, d - .06, '#2a2c2e', 0, 0, -.03), rbox(w, h - .05, d - .04, side, 0, .05, -.02, .015));
+        const P = (pw, ph, px, py) => g.add(rbox(pw - .006, ph - .006, .03, gm, px, py + .003, fz - .005, .008));
+        const yT = h*.52, yS = h*.42, yM = h*.22;
+        P(w*.46, h - yT - .01, -w*.27, yT); P(w*.54, h - yT - .01, w*.23, yT);                // 观音开（左窄右宽）
+        P(w/2, yT - yS, -w/4, yS); P(w/2, yT - yS, w/4, yS);                                  // 两个小抽屉
+        P(w, yS - yM, 0, yM); P(w, yM - .055, 0, .055);                                         // 两层大抽屉
+        g.add(box(.07, .012, .002, mat('#9a9b9c'), w*.32, h - .07, fz + .012));                  // 品牌标
+        break;
+      }
       const fm = mat(c, {metalness:.45, roughness:.28}), h = 1.8, fz = d/2 - .05;
       g.add(box(w - .02, .06, d - .06, '#2a2c2e', 0, 0, -.03), rbox(w, h - .06, d - .05, fm, 0, .06, -.025, .02), box(w - .01, h - .07, .003, '#2a2c2e', 0, .065, fz + .0015));
       if (w > .85){
@@ -2688,6 +2740,48 @@ function buildFurniture(f){
       g.add(box(w*.4, .003, .32, fabric('#d9cdb8'), -w*.18, T, d*.2), box(w*.4, .003, .32, fabric('#d9cdb8'), w*.18, T, -d*.2));
       break;
     }
+    case 'ligare': {            // ニトリ リガーレ 160：下柜（40 电饭煲台 + 60 抽屉 + 60 垃圾桶开放格）+ 台面 + 上台（左磨砂玻璃移门、右开放层板）
+      const wm = lightGrain(c || '#f1efea'), top = mat('#f7f6f3', {roughness:.12}), al = mat('#c9cacb', {metalness:.85, roughness:.3}), dkIn = lightGrain('#e9e6e0');
+      const ch = .985, cz = d/2, ud = .4, uz = -d/2 + ud/2, uy = 1.43, H2 = (f.h ?? 2020)/1000, bz2 = -d/2;
+      const X0 = -w/2, u1 = .4, u2 = .6;
+      // 下柜外框
+      g.add(box(.018, ch - .03, d, wm, X0 + .009, 0, 0), box(.018, ch - .03, d, wm, w/2 - .009, 0, 0), box(w, .06, d - .04, mat('#e6e3dd'), 0, 0, -.02), box(w, ch - .03, .01, dkIn, 0, 0, bz2 + .005));
+      [X0 + u1, X0 + u1 + u2].forEach(x => g.add(box(.018, ch - .03, d - .02, wm, x, 0, -.01)));
+      g.add(rbox(w + .01, .03, d + .02, top, 0, ch - .03, .01, .006));
+      // 40 单元：上部开放格 + 滑出台（放电饭煲）+ 下部门
+      const a1 = X0 + u1/2;
+      g.add(box(u1 - .03, .018, d - .04, wm, a1, .6, 0), box(u1 - .03, .025, .02, wm, a1, .6, cz - .02));
+      g.add(rbox(u1 - .02, .52, .02, wm, a1, .065, cz - .01, .004), box(u1 - .1, .012, .012, al, a1, .54, cz + .006));
+      applRiceCooker(g, a1, .62, .02);
+      // 60 抽屉单元：顶部滑台 + 3 层抽屉，银色长条拉手
+      const a2 = X0 + u1 + u2/2;
+      [[.84, .1], [.6, .22], [.33, .25], [.065, .25]].forEach(([y, h]) => { g.add(rbox(u2 - .02, h - .01, .02, wm, a2, y, cz - .01, .004)); g.add(box(u2 - .1, .012, .012, al, a2, y + h - .035, cz + .006)); });
+      // 60 开放格：两只白色分类垃圾桶 + 顶部抽屉
+      const a3 = X0 + u1 + u2 + u2/2;
+      g.add(rbox(u2 - .02, .14, .02, wm, a3, .8, cz - .01, .004), box(u2 - .1, .012, .012, al, a3, .9, cz + .006));
+      [-1, 1].forEach(s => { g.add(rbox(.26, .55, .38, mat('#f2f2f0', {roughness:.5}), a3 + s*.14, .065, .02, .02), rbox(.27, .05, .39, mat('#e9e9e6'), a3 + s*.14, .6, .02, .015)); });
+      // 上台：侧板、背板、顶板、底板
+      g.add(box(w, H2 - ch, .012, wm, 0, ch, bz2 + .006));
+      [X0 + .009, w/2 - .009].forEach(x => g.add(box(.018, H2 - ch, ud, wm, x, ch, uz)));
+      g.add(box(w, .02, ud, wm, 0, H2 - .02, uz), box(w, .025, ud, wm, 0, uy, uz));
+      // 左半：磨砂玻璃移门（铝框）
+      const gl = mat('#e9eeee', {roughness:.3, transparent:true, opacity:.82});
+      [[-w/4 - .005, .01], [-w/4 + .2, -.015]].slice(0, 1).forEach(([x, dz]) => {
+        g.add(box(w/2 - .04, H2 - uy - .06, .006, gl, x, uy + .03, uz + ud/2 - .02 + dz));
+        [-1, 1].forEach(s => g.add(box(.012, H2 - uy - .06, .016, al, x + s*(w/4 - .026), uy + .03, uz + ud/2 - .02 + dz)));
+      });
+      g.add(box(w/2 - .04, .2, .01, wm, -w/4, uy + .32, uz - .06));
+      // 右半：两层开放层板 + 杯子
+      [uy + .19, uy + .36].forEach(y => g.add(box(w/2 - .04, .018, ud - .03, wm, w/4, y, uz)));
+      for (let i = 0; i < 4; i++){ g.add(cyl(.035, .03, .1, mat('#eef3f4', {roughness:.05, transparent:true, opacity:.5}), w/4 - .27 + i*.18, uy + .38, uz + .05, 16)); g.add(cyl(.045, .04, .09, mat(i < 2 ? '#2b2b2d' : '#f4f2ee', {roughness:.3}), w/4 - .27 + i*.18, uy + .21, uz + .05, 18)); }
+      // 台面上：微波炉（左）、空气炸锅（右）
+      applMicrowave(g, -w/2 + .3, ch, cz - .23);
+      applAirFryer(g, w/4 + .05, ch, cz - .2);
+      break;
+    }
+    case 'microwave': applMicrowave(g, 0, (f.y ?? 0)/1000, 0, w, d, (f.h ?? 345)/1000); break;
+    case 'airfryer': applAirFryer(g, 0, (f.y ?? 0)/1000, 0, w, d, (f.h ?? 310)/1000); break;
+    case 'ricecooker': applRiceCooker(g, 0, (f.y ?? 0)/1000, 0, w, d, (f.h ?? 215)/1000); break;
     case 'kboard': {            // 厨房收纳柜（正面用实物照片贴图）
       const h = (f.h ?? 1970)/1000, pm = photoMat(f.tex), body = mat(c || '#b4936f', {roughness:.6});
       g.add(box(w, h, d - .01, body, 0, 0, -.005));
@@ -2866,12 +2960,24 @@ function buildFurniture(f){
       g.add(cyl(w*.33, w*.36, .1, cu, 0, H2 + .02, 0, 24));
       break;
     }
-    case 'cat': {               // 布偶猫（趴着），y = 所在高度 mm
-      const y = (f.y ?? 0)/1000, fur = fabric('#f1ebe0'), pt = fabric('#6e5a4b'), L = Math.max(w, d)/2;
-      g.add(blob(L*.55, L*.32, L*.85, fur, 0, y + L*.3, 0, 20), blob(L*.38, L*.34, L*.36, fur, 0, y + L*.42, L*.85, 18));
-      g.add(blob(L*.22, L*.2, L*.2, pt, 0, y + L*.4, L*1.08, 14));                       // 脸部重点色
-      [-1, 1].forEach(s => g.add(rot(cyl(0, L*.12, L*.22, pt, s*L*.2, y + L*.66, L*.86, 10), 0, 0, s*-.3)));
-      g.add(rot(blob(L*.16, L*.14, L*.6, pt, L*.42, y + L*.18, -L*.55, 14), 0, .5, 0));
+    case 'cat': {               // 布偶猫（双色 bicolor、蓝灰重点色）：趴成面包状，白胸白爪，脸上白色倒 V，蓝眼
+      const y = (f.y ?? 0)/1000, L = Math.max(w, d)/2;
+      const wh = fabric('#f3f0ea'), bd = fabric(f.body || '#c9c1b6'), pt = fabric(f.point || '#857e79'), pk = mat('#e9a9a6', {roughness:.6});
+      const o = new THREE.Group(); o.position.y = y; g.add(o);
+      o.add(blob(L*.5, L*.3, L*.78, bd, 0, L*.31, -L*.05, 24));                   // 背部（灰米色）
+      o.add(blob(L*.52, L*.24, L*.8, wh, 0, L*.22, -L*.02, 24));                  // 腹侧白毛
+      o.add(blob(L*.4, L*.3, L*.3, wh, 0, L*.3, L*.55, 20));                      // 胸前大白围脖
+      [-1, 1].forEach(s => o.add(blob(L*.12, L*.07, L*.16, wh, s*L*.17, L*.06, L*.78, 12)));   // 收起的白前爪
+      const hd = new THREE.Group(); hd.position.set(0, L*.62, L*.62); hd.rotation.y = f.look ?? .35; o.add(hd);
+      hd.add(blob(L*.3, L*.27, L*.27, wh, 0, 0, 0, 20));                          // 白色底
+      [-1, 1].forEach(s => { const m = blob(L*.17, L*.2, L*.18, pt, s*L*.15, L*.06, L*.06, 16); m.rotation.z = s*.35; hd.add(m); });   // 两侧灰色面罩，中间留出白色倒 V
+      hd.add(blob(L*.22, L*.12, L*.2, pt, 0, L*.18, -L*.02, 16));                 // 头顶灰
+      [-1, 1].forEach(s => { const e = new THREE.Mesh(new THREE.ConeGeometry(L*.09, L*.2, 12), pt); e.position.set(s*L*.17, L*.3, -L*.02); e.rotation.z = s*-.35; hd.add(e);
+        const ei = new THREE.Mesh(new THREE.ConeGeometry(L*.05, L*.13, 10), pk); ei.position.set(s*L*.165, L*.29, L*.02); ei.rotation.z = s*-.35; hd.add(ei);
+        hd.add(blob(L*.045, L*.04, L*.02, mat('#6f9fd0', {roughness:.15}), s*L*.1, L*.04, L*.25, 12), blob(L*.02, L*.03, L*.01, mat('#111'), s*L*.1, L*.04, L*.266, 8)); });
+      hd.add(blob(L*.03, L*.022, L*.02, pk, 0, -L*.03, L*.27, 10));               // 粉鼻头
+      const tail = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-L*.2, L*.12, -L*.8), new THREE.Vector3(-L*.55, L*.1, -L*.4), new THREE.Vector3(-L*.55, L*.08, L*.2), new THREE.Vector3(-L*.3, L*.07, L*.55)]), 20, L*.11, 10), pt);
+      o.add(tail);
       break;
     }
     case 'masu': {              // 地面检查井盖（桝）
