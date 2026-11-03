@@ -563,7 +563,8 @@ const LIB = [
     ['recliner','电动沙发 ニトリ EK7980 米色',1950,950,'#d8ccb6',{leather:false, seats:2}],
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
     ['trestle','餐桌 Nitori ヤマト160 深棕',1600,900,'#4e3322',{h:680}],
-    ['photorug','地毯 ヨーロピアン 200×250',2500,2000,'#ebe4d4',{tex:'sav01'}]]},
+    ['photorug','地毯 ヨーロピアン 200×250',2500,2000,'#ebe4d4',{tex:'sav01'}],
+    ['photorug','地毯 メルシン LGY 200×250',2500,2000,'#e6e1d8',{tex:'mersin'}]]},
   {cat:'户外', items:[
     ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
@@ -3181,7 +3182,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art', 'globe', 'drum', 'awning', 'ceilpanel'];
+  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
