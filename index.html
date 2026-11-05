@@ -564,7 +564,8 @@ const LIB = [
     ['ovaltable','餐桌 IKEA TJÄRKIL 235',2350,1000,'#6e4a2f',{legs:'#1c1c1e', h:750}],
     ['trestle','餐桌 Nitori ヤマト160 深棕',1600,900,'#4e3322',{h:680}],
     ['photorug','地毯 ヨーロピアン 200×250',2500,2000,'#ebe4d4',{tex:'sav01'}],
-    ['photorug','地毯 メルシン LGY 200×250',2500,2000,'#e6e1d8',{tex:'mersin'}]]},
+    ['photorug','地毯 メルシン LGY 200×250',2500,2000,'#e6e1d8',{tex:'mersin'}],
+    ['drape','窗帘 ニトリ RK015 IV＋纱帘',1900,120,'#ece6da',{tex:'rk015', top:2080}]]},
   {cat:'户外', items:[
     ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
@@ -794,6 +795,7 @@ function furnSVG(t,w,d,c){
     case 'catbowl': return rc(x,y,w,d,'#d9cfc0','rx="30"') + ec(-w*.22,0,70,70,'#fff') + ec(w*.22,0,70,70,'#fff');
     case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
     case 'beam': return rc(x,y,w,d,'none',DASH);
+    case 'drape': return rc(x,y,w,d,'none','stroke-dasharray="20 12" stroke-width="6"') + rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da');
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
     case 'art': return rc(x,y,w,d,c);
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
@@ -2032,7 +2034,7 @@ function staveWood(c){
   _wm.set(c, m); return m;
 }
 // 地毯花纹贴图：gabbeh（手织羊毛、斑驳底色 + 稀疏小图案）、heather（混色短毛）、berber（菱形线条）
-const _rugT = new Map();
+const _rugT = new Map(), _dm = new Map();
 function rugTex(kind, c, w, d){
   const key = kind + c + w + d; if (_rugT.has(key)) return _rugT.get(key);
   const W = 1024, Hh = Math.round(1024*d/w), cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const g = cv.getContext('2d');
@@ -2648,6 +2650,26 @@ function buildFurniture(f){
       for (let k = 0; k < 3; k++){ const b = rbox(r - .1, .012, .14, wm, (r - .1)/2 + .1, y0 - .02, 0, .006), p = new THREE.Group(); p.add(b); p.rotation.y = k*Math.PI*2/3 + .3; g.add(p); }
       break;
     }
+    case 'drape': {             // 遮光帘（贴图布料）+ 纱帘：f.top = 轨道高度 mm，f.open = 0~1（1 = 拉开收在两侧）
+      const top = (f.top ?? 2080)/1000, h = top - .03, op = f.open ?? .85, gath = Math.max(.3, w/2*(1 - op*.72)), dz = .05;
+      let dm = f.tex && PHOTO_TEX[f.tex] ? _dm.get(f.tex) : null;
+      if (f.tex && PHOTO_TEX[f.tex] && !dm){
+        const t = new THREE.TextureLoader().load(PHOTO_TEX[f.tex], () => { try { startLoop(); } catch(e) {} }); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
+        dm = new THREE.MeshPhysicalMaterial({map:t, roughness:.72, sheen:.9, sheenRoughness:.4, sheenColor:new THREE.Color('#fff6e4'), emissive:new THREE.Color('#fbf5e8'), emissiveMap:t, emissiveIntensity:.16, side:THREE.DoubleSide}); _dm.set(f.tex, dm);
+      }
+      if (!dm) dm = new THREE.MeshPhysicalMaterial({color:c || '#ece6da', roughness:.8, sheen:.6, side:THREE.DoubleSide});
+      const panel = (pw, x, folds) => {                                     // 一片带褶皱的布：宽 pw，波浪深度随褶数
+        const geo = new THREE.PlaneGeometry(pw, h, Math.max(24, folds*8), 1), pos = geo.attributes.position, uv = geo.attributes.uv;
+        for (let i = 0; i < pos.count; i++){ const u = (pos.getX(i) + pw/2)/pw; pos.setZ(i, Math.sin(u*folds*Math.PI*2)*.035); uv.setXY(i, u*pw/.5, uv.getY(i)*h/1); }
+        geo.computeVertexNormals(); const m = new THREE.Mesh(geo, dm); m.position.set(x, .01 + h/2, bz + dz + .02); m.castShadow = true; m.receiveShadow = true; return m;
+      };
+      [-1, 1].forEach(sd => g.add(panel(gath, sd*(w/2 - gath/2), Math.max(3, Math.round(gath/.11)))));
+      const sh = mat('#fbf8f1', {roughness:1, transparent:true, opacity:.62, side:THREE.DoubleSide, emissive:'#fbf8f1', emissiveIntensity:.35});   // 纱帘（靠窗一侧）
+      { const geo = new THREE.PlaneGeometry(w - .02, h - .01, 120, 1), pos = geo.attributes.position; for (let i = 0; i < pos.count; i++){ const u = (pos.getX(i) + w/2)/w; pos.setZ(i, Math.sin(u*w/.09*Math.PI*2)*.015); } geo.computeVertexNormals();
+        const m = new THREE.Mesh(geo, sh); m.position.set(0, .02 + (h - .01)/2, bz + .02); g.add(m); }
+      [0, dz + .02].forEach(z => g.add(box(w + .06, .022, .03, mat('#e9e6e0', {roughness:.4}), 0, top - .01, bz + z)));                         // 双轨
+      break;
+    }
     case 'curtain': {           // 纱帘：一排有褶皱的半透明布
       const h = H - .06, n = Math.max(4, Math.round(w/.12)), fm = mat(c || '#fbf8f2', {roughness:1, transparent:true, opacity:.45, side:THREE.DoubleSide, emissive:c || '#fbf8f2', emissiveIntensity:.25});
       for (let i = 0; i < n; i++){ const x = -w/2 + w/n*(i + .5), b = box(w/n*1.08, h - .02, .012, fm, x, .02, (i % 2 ? .03 : -.03)); b.castShadow = false; g.add(b); }   // 纱帘透光，不挡阳光
@@ -3182,7 +3204,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
+  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
