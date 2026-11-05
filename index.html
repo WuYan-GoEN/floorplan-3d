@@ -567,7 +567,7 @@ const LIB = [
     ['photorug','地毯 メルシン LGY 200×250',2500,2000,'#e6e1d8',{tex:'mersin'}],
     ['drape','窗帘 ニトリ RK015 IV＋纱帘',1900,120,'#ece6da',{tex:'rk015', top:2080}]]},
   {cat:'户外', items:[
-    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
+    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['rosevine','藤本月季（粉，攀栏杆）',3000,500,'#f0a0a4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
     ['litter','大号猫砂盆',600,500,'#e7e2d8'],['catbowl','猫碗',500,300,'#d9cfc0'],['cattree','猫爬架',600,600,'#d8c3a5']]},
 ];
@@ -795,6 +795,7 @@ function furnSVG(t,w,d,c){
     case 'catbowl': return rc(x,y,w,d,'#d9cfc0','rx="30"') + ec(-w*.22,0,70,70,'#fff') + ec(w*.22,0,70,70,'#fff');
     case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
     case 'beam': return rc(x,y,w,d,'none',DASH);
+    case 'rosevine': { let o = rc(x,y,w,d,'#8fb27a','rx="60" fill-opacity=".75"'); for (let i = 0; i*220 < w - 120; i++){ const cx = x + 110 + i*220 + (i%3)*30, cy = y + d*(.3 + ((i*7)%5)*.1); o += ec(cx,cy,60,60,i%2 ? '#f6c3c0' : '#ee8f96'); } return o; }
     case 'drape': return rc(x,y,w,d,'none','stroke-dasharray="20 12" stroke-width="6"') + rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da');
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
     case 'art': return rc(x,y,w,d,c);
@@ -2034,7 +2035,7 @@ function staveWood(c){
   _wm.set(c, m); return m;
 }
 // 地毯花纹贴图：gabbeh（手织羊毛、斑驳底色 + 稀疏小图案）、heather（混色短毛）、berber（菱形线条）
-const _rugT = new Map(), _dm = new Map();
+const _rugT = new Map(), _dm = new Map(), _roseG = {};
 function rugTex(kind, c, w, d){
   const key = kind + c + w + d; if (_rugT.has(key)) return _rugT.get(key);
   const W = 1024, Hh = Math.round(1024*d/w), cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const g = cv.getContext('2d');
@@ -2648,6 +2649,46 @@ function buildFurniture(f){
       const r = w/2, y0 = H - .32, wm = woodM(c || '#6b4a33');
       g.add(rod([0, H, 0], [0, y0, 0], .012, mat('#e9e6e0')), cyl(.12, .12, .1, mat('#efece6', {roughness:.4}), 0, y0 - .05, 0, 28), cyl(.11, .11, .02, glowMat('#fff', '#fff3dc', .9), 0, y0 - .07, 0, 28));
       for (let k = 0; k < 3; k++){ const b = rbox(r - .1, .012, .14, wm, (r - .1)/2 + .1, y0 - .02, 0, .006), p = new THREE.Group(); p.add(b); p.rotation.y = k*Math.PI*2/3 + .3; g.add(p); }
+      break;
+    }
+    case 'rosevine': {          // 藤本月季：沿栏杆绑扎，叶片 + 杯状重瓣花（InstancedMesh）；f.top = 栏杆高 mm
+      const top = (f.top ?? 900)/1000, L = w, Q = new THREE.Object3D(), C = new THREE.Color(), lerpC = (a, b, t) => C.set(a).lerp(new THREE.Color(b), t);
+      if (!_roseG.cup){
+        const cup = new THREE.LatheGeometry([[0,0],[.016,.004],[.032,.016],[.044,.034],[.05,.05],[.048,.056]].map(([r,y]) => new THREE.Vector2(r,y)), 20), p = cup.attributes.position;
+        for (let i = 0; i < p.count; i++){ const x = p.getX(i), y = p.getY(i), z = p.getZ(i), k = 1 + .16*Math.sin(5*Math.atan2(z, x))*(y/.056); p.setX(i, x*k); p.setZ(i, z*k); }
+        cup.computeVertexNormals(); _roseG.cup = cup;
+        _roseG.mid = cup.clone().scale(.68, .9, .68).translate(0, .012, 0).rotateY(.6);
+        _roseG.core = new THREE.SphereGeometry(.017, 12, 8).scale(1, .7, 1).translate(0, .03, 0);
+        const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(.022, .02, 0, .062); sh.quadraticCurveTo(-.022, .02, 0, 0);
+        _roseG.leaf = new THREE.ShapeGeometry(sh, 4);
+      }
+      const pm = new THREE.MeshPhysicalMaterial({roughness:.55, sheen:.6, sheenColor:new THREE.Color('#fff0f0'), side:THREE.DoubleSide});
+      const lm = new THREE.MeshStandardMaterial({roughness:.5, side:THREE.DoubleSide});
+      const roses = [], leaves = [];
+      const yAt = () => Math.min(top + .12, .22 + (top - .12)*Math.sqrt(R()) + (R() < .25 ? R()*.12 : 0));     // 越往上越密，有的垂出栏杆顶
+      const nCl = Math.round(L*15);
+      for (let k = 0; k < nCl; k++){
+        const cx = -L/2 + .1 + R()*(L - .2), cy = yAt(), sd = R() < .7 ? -1 : 1, n = 3 + Math.floor(R()*6);       // 院子一侧（-z）开得多
+        for (let j = 0; j < n; j++) roses.push([cx + (R() - .5)*.26, Math.max(.15, cy + (R() - .5)*.22), sd*(.04 + R()*.1), sd, .75 + R()*.5]);
+        for (let j = 0; j < 12; j++) leaves.push([cx + (R() - .5)*.42, Math.min(top + .14, Math.max(.1, cy + (R() - .5)*.34)), sd*(.02 + R()*.11), sd]);
+      }
+      for (let k = 0, N = Math.round(L*190); k < N; k++){ const sd = R() < .6 ? -1 : 1; leaves.push([-L/2 + R()*L, .1 + R()*top, sd*(.01 + R()*.1), sd]); }
+      const mk = (geo, m, n) => { const im = new THREE.InstancedMesh(geo, m, n); im.castShadow = true; im.receiveShadow = true; g.add(im); return im; };
+      const iCup = mk(_roseG.cup, pm, roses.length), iMid = mk(_roseG.mid, pm, roses.length), iCore = mk(_roseG.core, pm, roses.length), iLf = mk(_roseG.leaf, lm, leaves.length);
+      roses.forEach(([x, y, z, sd, s], i) => {
+        Q.position.set(x, y, z); Q.rotation.set(sd*(Math.PI/2 - .25 - R()*.6), (R() - .5)*.8, (R() - .5)*.8); Q.scale.setScalar(s); Q.updateMatrix();
+        [iCup, iMid, iCore].forEach(im => im.setMatrixAt(i, Q.matrix));
+        const t = R(); iCup.setColorAt(i, lerpC('#ec8a92', '#f9d3cf', t)); iMid.setColorAt(i, lerpC('#f29aa0', '#fbe0d8', t*.8 + .2)); iCore.setColorAt(i, lerpC('#ef9198', '#f7c9c2', t));
+      });
+      leaves.forEach(([x, y, z, sd], i) => {
+        Q.position.set(x, y, z); Q.rotation.set((R() - .5)*1.1, (sd < 0 ? Math.PI : 0) + (R() - .5)*1.1, R()*Math.PI*2); Q.scale.setScalar(1.2 + R()*.7); Q.updateMatrix();
+        iLf.setMatrixAt(i, Q.matrix); iLf.setColorAt(i, lerpC('#2f5626', '#6f9645', R()));
+      });
+      const cane = mat('#5b6a3a', {roughness:.7});                                                                      // 植株主干：约 1.8m 一棵，枝条扇形绑到栏杆上
+      for (let xb = -L/2 + .9; xb < L/2; xb += 1.8){
+        for (let j = 0; j < 4; j++){ const tx = xb + (j - 1.5)*.45 + (R() - .5)*.2, ty = .35 + j%2*.35 + R()*.2; g.add(rod([xb, 0, -.06], [tx, Math.min(ty, top), -.03], .009, cane, .005, 6)); }
+        g.add(rod([xb - .9, top - .03, -.03], [xb + .9, top - .02, -.03], .006, cane, .006, 6));
+      }
       break;
     }
     case 'drape': {             // 遮光帘（贴图布料）+ 纱帘：f.top = 轨道高度 mm，f.open = 0~1（1 = 拉开收在两侧）
