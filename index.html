@@ -678,7 +678,7 @@ const ln = (x1,y1,x2,y2,ex='') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${
 const pa = (d,f='none',ex='') => `<path d="${d}" fill="${f}" ${ST} ${ex}/>`;
 const DASH = 'stroke-dasharray="4 3"';
 
-function furnSVG(t,w,d,c){
+function furnSVG(t,w,d,c,o={}){
   const x = -w/2, y = -d/2, m = Math.min(w,d);
   switch (t){
     case 'bed': {
@@ -796,7 +796,7 @@ function furnSVG(t,w,d,c){
     case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
     case 'beam': return rc(x,y,w,d,'none',DASH);
     case 'rosevine': { let o = rc(x,y,w,d,'#8fb27a','rx="60" fill-opacity=".75"'); for (let i = 0; i*220 < w - 120; i++){ const cx = x + 110 + i*220 + (i%3)*30, cy = y + d*(.3 + ((i*7)%5)*.1); o += ec(cx,cy,60,60,i%2 ? '#f6c3c0' : '#ee8f96'); } return o; }
-    case 'drape': return rc(x,y,w,d,'none','stroke-dasharray="20 12" stroke-width="6"') + rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da');
+    case 'drape': return rc(x,y,w,d,'none','stroke-dasharray="20 12" stroke-width="6"') + (o.single ? rc(x,y,w,d,c||'#ece6da','fill-opacity=".8"') : rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da'));
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
     case 'art': return rc(x,y,w,d,c);
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
@@ -840,7 +840,7 @@ function renderFurn(){
     const fs = Math.max(80, Math.min(170, Math.min(f.w,f.d)*.2));
     const label = Math.min(f.w,f.d) >= 380 && !NOLABEL.includes(f.type)
       ? `<text transform="rotate(${-f.rot})" font-size="${fs}" text-anchor="middle" dominant-baseline="central" fill="#4a443c" opacity=".8" pointer-events="none">${esc(nm(f.name))}</text>` : '';
-    return `<g class="furn" data-fid="${f.id}" transform="translate(${f.cx} ${f.cy}) rotate(${f.rot})">${furnSVG(f.type,f.w,f.d,f.color)}${label}</g>`;
+    return `<g class="furn" data-fid="${f.id}" transform="translate(${f.cx} ${f.cy}) rotate(${f.rot})">${furnSVG(f.type,f.w,f.d,f.color,f)}${label}</g>`;
   }).join('');
 }
 
@@ -2698,17 +2698,18 @@ function buildFurniture(f){
         const t = new THREE.TextureLoader().load(PHOTO_TEX[f.tex], () => { try { startLoop(); } catch(e) {} }); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
         dm = new THREE.MeshPhysicalMaterial({map:t, roughness:.72, sheen:.9, sheenRoughness:.4, sheenColor:new THREE.Color('#fff6e4'), emissive:new THREE.Color('#fbf5e8'), emissiveMap:t, emissiveIntensity:.16, side:THREE.DoubleSide}); _dm.set(f.tex, dm);
       }
-      if (!dm) dm = new THREE.MeshPhysicalMaterial({color:c || '#ece6da', roughness:.8, sheen:.6, side:THREE.DoubleSide});
+      if (!dm){ const k = 'plain' + (c || '#ece6da'); dm = _dm.get(k); if (!dm){ dm = weaveMat(c || '#ece6da').clone(); dm.side = THREE.DoubleSide; _dm.set(k, dm); } }   // 素色亚麻感布
       const panel = (pw, x, folds) => {                                     // 一片带褶皱的布：宽 pw，波浪深度随褶数
         const geo = new THREE.PlaneGeometry(pw, h, Math.max(24, folds*8), 1), pos = geo.attributes.position, uv = geo.attributes.uv;
         for (let i = 0; i < pos.count; i++){ const u = (pos.getX(i) + pw/2)/pw; pos.setZ(i, Math.sin(u*folds*Math.PI*2)*.035); uv.setXY(i, u*pw/.5, uv.getY(i)*h/1); }
         geo.computeVertexNormals(); const m = new THREE.Mesh(geo, dm); m.position.set(x, .01 + h/2, bz + dz + .02); m.castShadow = true; m.receiveShadow = true; return m;
       };
-      [-1, 1].forEach(sd => g.add(panel(gath, sd*(w/2 - gath/2), Math.max(3, Math.round(gath/.11)))));
-      const sh = mat('#fbf8f1', {roughness:1, transparent:true, opacity:.62, side:THREE.DoubleSide, emissive:'#fbf8f1', emissiveIntensity:.35});   // 纱帘（靠窗一侧）
+      if (f.single){ const pw = Math.max(.25, w*(1 - op*.78)); g.add(panel(pw, w/2 - pw/2, Math.max(4, Math.round(pw/.15)))); }   // 单片，收向 +x 一侧
+      else [-1, 1].forEach(sd => g.add(panel(gath, sd*(w/2 - gath/2), Math.max(3, Math.round(gath/.11)))));
+      if (f.sheer !== false){ const sh = mat('#fbf8f1', {roughness:1, transparent:true, opacity:.62, side:THREE.DoubleSide, emissive:'#fbf8f1', emissiveIntensity:.35});   // 纱帘（靠窗一侧）
       { const geo = new THREE.PlaneGeometry(w - .02, h - .01, 120, 1), pos = geo.attributes.position; for (let i = 0; i < pos.count; i++){ const u = (pos.getX(i) + w/2)/w; pos.setZ(i, Math.sin(u*w/.09*Math.PI*2)*.015); } geo.computeVertexNormals();
-        const m = new THREE.Mesh(geo, sh); m.position.set(0, .02 + (h - .01)/2, bz + .02); g.add(m); }
-      [0, dz + .02].forEach(z => g.add(box(w + .06, .022, .03, mat('#e9e6e0', {roughness:.4}), 0, top - .01, bz + z)));                         // 双轨
+        const m = new THREE.Mesh(geo, sh); m.position.set(0, .02 + (h - .01)/2, bz + .02); g.add(m); } }
+      (f.sheer === false ? [dz + .02] : [0, dz + .02]).forEach(z => g.add(box(w + .06, .022, .03, mat('#e9e6e0', {roughness:.4}), 0, top - .01, bz + z)));                         // 双轨
       break;
     }
     case 'curtain': {           // 纱帘：一排有褶皱的半透明布
