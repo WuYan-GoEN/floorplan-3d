@@ -539,7 +539,7 @@ const LIB = [
   {cat:'书房 · 休闲', items:[
     ['desk','长书桌',1600,700,'#d8c2a2'],['officechair','办公椅',620,620,'#4a4f55'],['bookshelf','大书架',1600,350,'#e2cfb4'],
     ['piano','立式钢琴',1500,600,'#1f1d1b'],['treadmill','跑步机',800,1800,'#3a3a3c'],['armchair','阅读椅',750,800,'#c9a98a'],
-    ['massage','按摩椅',750,1250,'#9a6a45'],['lsofa','中古 L 形沙发',2000,1500,'#c4a682'],['ychair','Y 形椅',550,520,'#d9c9ad'],['tvcart','移动电视架',1450,600,'#e9e4da']]},
+    ['massage','按摩椅',750,1250,'#9a6a45'],['lsofa','中古 L 形沙发',2000,1500,'#c4a682'],['ychair','Y 形椅',550,520,'#d9c9ad'],['tvcart','移动电视架',1450,600,'#e9e4da'],['tvlift','电动升降电视架 W150＋BRAVIA 7II',1500,400,'#6b4a33',{tv:75, lift:1080, swivel:0}]]},
   {cat:'灯具', items:[
     ['drum','布艺吸顶灯',600,600,'#f3eadb'],['pendant','中古吊灯',900,900,'#6b4a33'],['globe','小吊灯',220,220,'#6b4a33']]},
   {cat:'实物候选', items:[
@@ -782,6 +782,7 @@ function furnSVG(t,w,d,c,o={}){
     case 'lsofa': { const k = Math.min(800, d*.55, w*.42); return `<path d="M${x} ${y}H${x+w}V${y+k}H${x+k}V${y+d}H${x}Z" fill="${c||'#cdbfa8'}" ${ST}/>` + rc(x+20,y+20,w-40,180,shade(c||'#cdbfa8',.85)) + rc(x+20,y+20,180,d-40,shade(c||'#cdbfa8',.85)); }
     case 'ychair': return rc(x+30,y+40,w-60,d-70,c||'#d9c9ad','rx="40"') + pa(`M${x+30} ${y+60}Q0 ${y-60} ${x+w-30} ${y+60}`,'none','stroke-width="3"');
     case 'ovaltable': return rc(x,y,w,d,c||'#b88a5e',`rx="${d/2}"`);
+    case 'tvlift': { const tw = (o.tv ?? 75)*22.26; return rc(x,y,w,d,c||'#6b4a33','rx="20"') + rc(-60,y+30,120,110,'#3a2c22') + rc(-tw/2,y+150,tw,45,'#18181a'); }
     case 'tvcart': return rc(-w*.31,y,w*.62,d,'#e9e4da','rx="40"') + rc(x,-d*.1,w,40,'#18181a');
     case 'massage': return rc(x,y,w,d,c||'#9a6a45','rx="120"') + rc(x+w*.2,y+60,w*.6,d*.35,shade(c||'#9a6a45',.8),'rx="80"');
     case 'globe': case 'drum': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,w*.15,d*.15,'#f6ecd9');
@@ -796,7 +797,7 @@ function furnSVG(t,w,d,c,o={}){
     case 'pendant': case 'fan': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
     case 'beam': return rc(x,y,w,d,'none',DASH);
     case 'rosevine': { let o = rc(x,y,w,d,'#8fb27a','rx="60" fill-opacity=".75"'); for (let i = 0; i*220 < w - 120; i++){ const cx = x + 110 + i*220 + (i%3)*30, cy = y + d*(.3 + ((i*7)%5)*.1); o += ec(cx,cy,60,60,i%2 ? '#f6c3c0' : '#ee8f96'); } return o; }
-    case 'drape': return rc(x,y,w,d,'none','stroke-dasharray="20 12" stroke-width="6"') + (o.single ? rc(x,y,w,d,c||'#ece6da','fill-opacity=".8"') : rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da'));
+    case 'drape': return rc(x,y,w,d,'#ece6da','fill-opacity=".3" stroke-dasharray="20 12" stroke-width="6"') + (o.single ? rc(x,y,w,d,c||'#ece6da','fill-opacity=".8"') : rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da'));
     case 'curtain': return rc(x,y,w,d,'#f3efe8',DASH);
     case 'art': return rc(x,y,w,d,c);
     case 'rugmc': return rc(x,y,w,d,'#efe6d6') + rc(x+100,y+100,w-200,d-200,'none','stroke-width="2"') + rc(x+170,y+170,w-340,d-340,'none');
@@ -1130,6 +1131,24 @@ function bindRoomPanel(){
 const SWATCHES = ['#f6f4ef','#e9e2d3','#d6c9b4','#c4a682','#b88a5e','#8f6a48','#5a4636','#8f7260','#c9cbc6','#8b8f8c','#3c3c3e','#1e1e1e','#7f8f74','#5f7a8a','#b56a4a','#d9a86c'];
 const SUB_COLORS = [['frame','框架色','Frame'],['legs','腿色','Legs'],['panel','腰板色','Panel'],['wood','木部色','Wood'],['top','台面色','Top'],['cap','端板色','End cap'],['body','身体色','Body'],['point','重点色','Points'],['hood','罩子色','Hood']];
 function hex6(c, t){ if (typeof c !== 'string' || !/^#/.test(c)) return typeColor ? (typeColor(t) || '#cccccc') : '#cccccc'; if (c.length === 4) return '#' + [...c.slice(1)].map(x => x + x).join(''); return c.slice(0, 7); }
+// 各类家具可调参数（面板里直接改，不用重建模）
+const FOPTS = {
+  drape:  [['tex','款式','Style','sel',[['rk015','RK015 IV 象牙白提花'],['rd226','RD226 红色'],['','纯色（用下面颜色）']]], ['open','拉开程度','Open','range',0,1,.05,.85], ['sheer','纱帘','Sheer','chk',true], ['single','单片','Single panel','chk',false], ['top','挂钩高度 mm','Hook height mm','range',1800,2400,10,2080]],
+  tvlift: [['tv','电视尺寸','TV size','sel',[[55,'55 寸'],[65,'65 寸'],[75,'75 寸'],[85,'85 寸（超出架子上限）']]], ['lift','屏幕中心高 mm','Screen center mm','range',880,1280,10,1080], ['swivel','左右转角 °','Swivel °','range',-105,105,5,0]],
+  tvcart: [['tv','电视尺寸','TV size','sel',[[1231,'55 寸'],[1447,'65 寸'],[1671,'75 寸'],[1890,'85 寸'],[1450,'原始（约 65 寸）']]], ['y','屏幕中心高 mm','Screen center mm','range',800,1400,10,1100]],
+  recliner:[['seats','座位数','Seats','sel',[[2,'2 人'],[3,'3 人']]], ['leather','皮革','Leather','chk',true]],
+  rosevine:[['top','栏杆高 mm','Fence height mm','range',600,1500,50,900]],
+};
+function optsHTML(f){
+  const L = FOPTS[f.type]; if (!L) return '';
+  return `<div class="form" style="margin-top:8px">${L.map(([k, zh, en, kind, a, b, st, df]) => {
+    const v = f[k];
+    if (kind === 'sel') return `<label class="full">${tr(zh, en)}<select data-opt="${k}">${a.map(([val, lb]) => `<option value="${val}" ${String(v ?? a[0][0]) === String(val) ? 'selected' : ''}>${lb}</option>`).join('')}</select></label>`;
+    if (kind === 'chk') return `<label>${tr(zh, en)}<input type="checkbox" data-opt="${k}" ${(v ?? a) ? 'checked' : ''}></label>`;
+    const cur = v ?? df ?? (a + b)/2;
+    return `<label class="full">${tr(zh, en)} <b data-ov="${k}">${cur}</b><input type="range" style="accent-color:#8f6a48;width:100%" data-opt="${k}" min="${a}" max="${b}" step="${st}" value="${cur}"></label>`;
+  }).join('')}</div>`;
+}
 function furnPanel(f){
   return `<section><h3>${tr('家具属性','Furniture')}</h3>
     <div class="form">
@@ -1142,6 +1161,7 @@ function furnPanel(f){
       <label>${tr('颜色','Color')}<input type="color" id="fC" value="${hex6(f.color, f.type)}"></label>
       ${SUB_COLORS.filter(([k]) => f[k] !== undefined && /^#/.test(f[k])).map(([k, zh, en]) => `<label>${tr(zh, en)}<input type="color" data-sub="${k}" value="${hex6(f[k])}"></label>`).join('')}
     </div>
+    ${optsHTML(f)}
     <div class="swatches" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${SWATCHES.map(c => `<button class="sw-btn" data-sw="${c}" title="${c}" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:${c};cursor:pointer"></button>`).join('')}</div>
     <div class="muted" style="margin-top:8px">${tr('占地面积','Footprint')} ${fmt(f.w*f.d/1e6)} m²</div>
     <div class="actions">
@@ -1160,6 +1180,11 @@ function bindFurnPanel(f){
   num('#fX', (g,v) => g.cx = v); num('#fY', (g,v) => g.cy = v); num('#fR', (g,v) => g.rot = norm(v));
   $('#fC').onchange = e => upd(g => g.color = e.target.value);
   document.querySelectorAll('#panel [data-sub]').forEach(el => el.onchange = e => upd(g => g[el.dataset.sub] = e.target.value));
+  document.querySelectorAll('#panel [data-opt]').forEach(el => {
+    const k = el.dataset.opt, val = () => el.type === 'checkbox' ? el.checked : el.tagName === 'SELECT' ? (el.value === '' || isNaN(el.value) ? el.value : +el.value) : +el.value;
+    if (el.type === 'range') el.oninput = () => { const o = document.querySelector(`#panel [data-ov="${k}"]`); if (o) o.textContent = el.value; };
+    el.onchange = () => { const v = val(); upd(g => g[k] = v); };
+  });
   document.querySelectorAll('#panel [data-sw]').forEach(el => el.onclick = () => { upd(g => g.color = el.dataset.sw); });
   $('#aRot').onclick = () => rotateSel(90);
   $('#aDup').onclick = duplicateSel;
@@ -2984,6 +3009,25 @@ function buildFurniture(f){
       g.add(box(w*.55, .003, .32, fabric('#c9b79c'), 0, T, 0));
       [-1, 1].forEach(s => { g.add(box(.36, .003, .26, fabric('#efe6d6'), s*w*.22, T, d*.12)); plate(g, .11, s*w*.22, T + .003, d*.12); });
       vase(g, 0, T + .003, -.05, .055, .2, '#e9e2d6', R);
+      break;
+    }
+    case 'tvlift': {            // 电动升降电视架（W150 D40，ミドルブラウン）：矮柜底座 + 后部立柱（木套＋黑钢升降柱）+ VESA 挂架 + 电视；屏幕朝 +z
+      const inch = f.tv ?? 75, tvw = inch*.02226, th = tvw*.5715, yc = (f.lift ?? 1080)/1000, sw = (f.swivel ?? 0)*Math.PI/180;
+      const wm = woodM(c || '#6b4a33'), dk = mat(darker(c || '#6b4a33', .55), {roughness:.7}), st = mat('#1c1c1e', {roughness:.45, metalness:.5}), bh = .2, pz = -d/2 + .1;
+      g.add(rbox(w - .04, .03, d - .04, dk, 0, 0, 0, .01));                                                  // 踢脚
+      g.add(rbox(w, bh - .03, d, wm, 0, .03, 0, .012));                                                     // 柜体
+      g.add(box(w*.42, bh - .09, .02, dk, -w*.18, .06, d/2 - .005), box(w*.25, bh - .09, .02, dk, w*.3, .06, d/2 - .005));   // 前面开放格（深色内凹）
+      g.add(box(w - .02, .004, .004, mat('#2a2018'), 0, bh - .005, d/2 + .001));
+      g.add(rbox(.16, .44, .13, wm, 0, bh, pz, .01));                                                       // 立柱木套
+      const sg = new THREE.Group(); sg.position.set(0, 0, pz); sg.rotation.y = sw; g.add(sg);                // 转向部分
+      const colTop = yc + .05;
+      sg.add(box(.09, colTop - bh - .4, .07, st, 0, bh + .4, 0));                                            // 黑钢升降柱
+      sg.add(rbox(.8, .13, .03, st, 0, yc - .065, .06, .008), box(.62, .07, .031, mat('#0d0d0f'), 0, yc - .035, .062));   // 横向挂架（中间镂空）
+      [-1, 1].forEach(k => sg.add(box(.04, .34, .02, st, k*.15, yc - .17, .085)));                            // 竖向挂臂
+      const tz = .1 + .03;
+      sg.add(rbox(tvw, th, .03, mat('#141416', {roughness:.35, metalness:.4}), 0, yc - th/2, tz, .004));     // 电视机身（BRAVIA 7II 窄边框）
+      sg.add(box(tvw - .012, th - .016, .002, screenMat('#1f2b3a'), 0, yc - th/2 + .008, tz + .031));
+      sg.add(rbox(tvw*.6, th*.5, .03, mat('#1a1a1c', {roughness:.5}), 0, yc - th*.3, tz - .03, .01));        // 背部凸起
       break;
     }
     case 'tvcart': {            // 可移动电视架：带脚轮底座 + 立柱 + 电视（屏幕朝 +z）
