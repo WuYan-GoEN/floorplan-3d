@@ -572,7 +572,7 @@ const LIB = [
     ['photorug','地毯 メルシン LGY 200×250',2500,2000,'#e6e1d8',{tex:'mersin'}],
     ['drape','窗帘 ニトリ RK015 IV＋纱帘',1900,120,'#ece6da',{tex:'rk015', top:2080}]]},
   {cat:'户外', items:[
-    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['rosevine','藤本月季（粉，攀栏杆）',3000,500,'#f0a0a4'],['shutter','电动卷帘（外置，可放下）',1850,160,'#26272a',{close:0}],['gardentap','立水栓＋石材水盆',500,600,'#cbc4b0'],['gardenlight','庭园灯',90,90,'#202124'],['downpipe','雨水管',70,100,'#222326'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
+    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['rosevine','藤本月季（粉，攀栏杆）',3000,500,'#f0a0a4'],['shutter','电动卷帘（外置，可放下）',1850,160,'#26272a',{close:0}],['blind','百叶窗（铝 25mm，可调角度/放下）',550,80,'#f4f4f2',{slat:25, top:2080, h:1130, drop:1, tilt:20}],['gardentap','立水栓＋石材水盆',500,600,'#cbc4b0'],['gardenlight','庭园灯',90,90,'#202124'],['downpipe','雨水管',70,100,'#222326'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
     ['litter','大号猫砂盆',600,500,'#e7e2d8'],['catbowl','猫碗',500,300,'#d9cfc0'],['cattree','猫爬架',600,600,'#d8c3a5']]},
 ];
@@ -790,6 +790,7 @@ function furnSVG(t,w,d,c,o={}){
     case 'lsofa': { const k = Math.min(800, d*.55, w*.42); return `<path d="M${x} ${y}H${x+w}V${y+k}H${x+k}V${y+d}H${x}Z" fill="${c||'#cdbfa8'}" ${ST}/>` + rc(x+20,y+20,w-40,180,shade(c||'#cdbfa8',.85)) + rc(x+20,y+20,180,d-40,shade(c||'#cdbfa8',.85)); }
     case 'ychair': return rc(x+30,y+40,w-60,d-70,c||'#d9c9ad','rx="40"') + pa(`M${x+30} ${y+60}Q0 ${y-60} ${x+w-30} ${y+60}`,'none','stroke-width="3"');
     case 'ovaltable': return rc(x,y,w,d,c||'#b88a5e',`rx="${d/2}"`);
+    case 'blind': return rc(x,y,w,d,c||'#f4f4f2') + ln(x,y+d*.5,x+w,y+d*.5,'stroke-dasharray="16 12"');
     case 'tray': { const n = o.beams ?? 2; let s = rc(x,y,w,d,'none','stroke-dasharray="60 40" stroke-width="8" opacity=".55"'); for (let i = 0; i < n; i++){ const t = o.bpos && o.bpos.length === n ? o.bpos[i] : (i+1)/(n+1); s += rc(x, y + d*t - 55, w, 110, 'none', DASH); } return s; }
     case 'tilewall': return rc(x,y,w,d,c||'#3c3e41');
     case 'bathkit': return rc(x,y,w,d,'#9aa0a6','fill-opacity=".35"') + `<circle cx="${-w*.1}" cy="${y+d*.5}" r="30" fill="#ccc" ${ST}/>`;
@@ -835,7 +836,7 @@ function furnSVG(t,w,d,c,o={}){
 }
 
 /* ======================= 渲染 ======================= */
-const NOLABEL = ['tray','tilewall','bathkit','shutter','gardentap','gardenlight','downpipe','plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
+const NOLABEL = ['blind','tray','tilewall','bathkit','shutter','gardentap','gardenlight','downpipe','plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
 function renderRooms(){
   let s = '';
   ROOMS.forEach(r => s += `<polygon class="room" data-room="${r.id}" points="${r.poly.map(p=>p.join(',')).join(' ')}" fill="url(#m-${state.rooms[r.id].mat})"/>`);
@@ -1157,6 +1158,7 @@ const FOPTS = {
   shutter:[['close','放下程度','Closed','range',0,1,.05,0]],
   tray:   [['beams','化妆梁根数','Beams','sel',[[0,'无'],[1,'1 根'],[2,'2 根'],[3,'3 根']]], ['dep','凹进深度 mm','Recess mm','range',60,300,10,120]],
   gardenlight:[['h','高度 mm','Height mm','range',400,1200,10,700]],
+  blind:[['drop','放下程度','Lowered','range',0,1,.05,1], ['tilt','叶片角度 °','Slat tilt °','range',-80,80,5,20], ['slat','叶片宽','Slat width','sel',[[25,'25mm 铝'],[50,'50mm 木']]], ['top','顶轨高 mm','Top mm','range',1800,2400,10,2080], ['h','全长 mm','Length mm','range',300,2400,10,1100]],
   kbstone:[['h','总高 mm','Height mm','range',1700,2100,10,1830], ['ch','台面高 mm','Counter mm','range',850,1000,5,880], ['ud','上柜深 mm','Upper depth mm','range',300,500,10,400]],
 };
 function optsHTML(f){
@@ -3141,6 +3143,28 @@ function buildFurniture(f){
       // 上台：4 门
       g.add(box(w, uH, ud - .018, wm, 0, H0 - uH, -d/2 + (ud - .018)/2));
       for (let i = 0; i < 4; i++) front(-w/2 + w*(i + .5)/4, H0 - uH + .002, w/4 - gp, uH - .004, -d/2 + ud, false);
+      break;
+    }
+    case 'blind': {             // 百叶窗：f.top 顶轨上沿高 mm、f.h 全放下长度 mm、f.drop 放下程度 0～1、f.tilt 叶片角 °、f.slat 叶片宽 mm（25 铝 / 50 木）；背面贴墙（-z）
+      const top = (f.top ?? 2080)/1000, L = (f.h ?? 1100)/1000, dr = Math.max(0, Math.min(1, f.drop ?? 1)), sw = (f.slat ?? 25)/1000, wood = sw >= .04;
+      const tl = (f.tilt ?? 20)*Math.PI/180, pitch = sw*.86, hr = wood ? .06 : .03, sm = wood ? mat(c || '#8a6446', {roughness:.55}) : mat(c || '#f4f4f2', {roughness:.38, metalness:.25});
+      const zc = bz + Math.max(sw/2 + .015, d/2);
+      g.add(rbox(w, hr, Math.min(d, sw + .02), wood ? sm : mat(c || '#f4f4f2', {roughness:.35, metalness:.3}), 0, top - hr, zc, .004));
+      if (wood) g.add(box(w + .01, .07, .01, sm, 0, top - .075, zc + sw/2 + .015));                 // 木百叶前挡板
+      const nT = Math.max(2, Math.round((L - hr - .03)/pitch)), nL = Math.round(nT*dr), nS = nT - nL, st = wood ? .0075 : .0035;
+      const geo = new THREE.BoxGeometry(w - .012, wood ? .0045 : .0018, sw), im = new THREE.InstancedMesh(geo, sm, nT), o = new THREE.Object3D();
+      let y = top - hr - .004;
+      for (let i = 0; i < nT; i++){
+        if (i < nS){ o.rotation.set(0, 0, 0); o.position.set(0, y, zc); y -= st; }
+        else { if (i === nS) y -= pitch*.6; o.rotation.set(tl, 0, 0); o.position.set(0, y, zc); y -= pitch; }
+        o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+      }
+      im.castShadow = true; im.receiveShadow = true; g.add(im);
+      const yb = y + pitch*.4;
+      g.add(rbox(w - .006, wood ? .02 : .012, sw*.8, sm, 0, yb - (wood ? .02 : .012), zc, .003));      // 底杆
+      const tm = mat(wood ? '#6b5240' : (c || '#e9e9e6'), {roughness:.9}), tw = wood ? .036 : .0025;
+      [-1, 1].forEach(s2 => [-1, 1].forEach(s3 => g.add(box(tw, top - hr - yb, .0015, tm, s2*(w/2 - Math.min(.12, w*.18)), yb, zc + s3*sw*.5*Math.cos(tl)))));   // 梯绳 / 梯带
+      g.add(rod([w/2 - .05, top - hr, zc + sw/2 + .01], [w/2 - .05, Math.max(yb, top - hr - .6), zc + sw/2 + .01], .005, mat('#dcdcd8', {roughness:.3})));   // 角度调节杆
       break;
     }
     case 'tray': {              // 折り上げ天井：天花开洞（buildArch 里扣掉），往上凹 f.dep，凹槽里横 f.beams 根化妆梁（沿宽度方向）
