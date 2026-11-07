@@ -509,6 +509,9 @@ const MATS = {
   gravel:  {name:'碎石', price:20, sw:'#cfc9bd'},
   concrete:{name:'混凝土', price:80, sw:'#cfccc6'},
   asphalt: {name:'沥青路面', price:0, sw:'#7a7a7c'},
+  stamp:   {name:'压花混凝土（石板纹）', price:120, sw:'#5f6266'},
+  greyplank:{name:'灰色木纹地板（洗面所）', price:120, sw:'#dcdbd7'},
+  ubfloor: {name:'整体浴室地板（深灰）', price:0, sw:'#6f7073'},
 };
 // 家具库：[类型, 名称, 宽, 深, 颜色]
 const LIB = [
@@ -529,6 +532,7 @@ const LIB = [
     ['counter','橱柜台面',1600,600,'#e9e5de'],['stove','燃气灶',750,450,'#dcdcdc'],['ksink','水槽',800,450,'#e1e6ea'],
     ['fridge','冰箱',700,700,'#dfe4e8'],['cabinet','餐边柜',1600,400,'#efe6d8']]},
   {cat:'卫浴', items:[
+    ['tilewall','整体浴室 深色石纹墙板',1700,20,'#3c3e41'],['bathkit','整体浴室 淋浴墙（花洒/镜/台面）',900,150,'#1b1c1e'],
     ['toilet','马桶',400,700,'#ffffff'],['vanity','浴室柜',800,500,'#eef1f3'],['vanity','双盆浴室柜',1200,500,'#eef1f3'],
     ['shower','淋浴房',900,900,'#e4edf2'],['bathtub','浴缸',1600,750,'#eef3f6'],['washer','洗衣机',600,600,'#e6ebee'],
     ['waterheater','电热水器',800,450,'#f4f4f2'],['cabinet','储物柜',1000,400,'#efe6d8']]},
@@ -541,6 +545,7 @@ const LIB = [
     ['piano','立式钢琴',1500,600,'#1f1d1b'],['treadmill','跑步机',800,1800,'#3a3a3c'],['armchair','阅读椅',750,800,'#c9a98a'],
     ['massage','按摩椅',750,1250,'#9a6a45'],['lsofa','中古 L 形沙发',2000,1500,'#c4a682'],['ychair','Y 形椅',550,520,'#d9c9ad'],['tvcart','移动电视架',1450,600,'#e9e4da'],['tvlift','电动升降电视架 W150＋BRAVIA 7II',1500,400,'#6b4a33',{tv:75, lift:1080, swivel:0}]]},
   {cat:'灯具', items:[
+    ['tray','折り上げ天井＋化妆梁',1820,1820,'#8a6446',{beams:2, dep:120}],
     ['drum','布艺吸顶灯',600,600,'#f3eadb'],['pendant','中古吊灯',900,900,'#6b4a33'],['globe','小吊灯',220,220,'#6b4a33']]},
   {cat:'实物候选', items:[
     ['kboard','餐边柜 エルフ1800 浅木',1800,490,'#b4936f',{h:1970, tex:'elf1800'}],
@@ -567,7 +572,7 @@ const LIB = [
     ['photorug','地毯 メルシン LGY 200×250',2500,2000,'#e6e1d8',{tex:'mersin'}],
     ['drape','窗帘 ニトリ RK015 IV＋纱帘',1900,120,'#ece6da',{tex:'rk015', top:2080}]]},
   {cat:'户外', items:[
-    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['rosevine','藤本月季（粉，攀栏杆）',3000,500,'#f0a0a4'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
+    ['deck','人工木平台',3640,1210,'#a8825f'],['awning','布篷（可收）',3600,1500,'#eee5d4'],['rosevine','藤本月季（粉，攀栏杆）',3000,500,'#f0a0a4'],['shutter','电动卷帘（外置，可放下）',1850,160,'#26272a',{close:0}],['gardentap','立水栓＋石材水盆',500,600,'#cbc4b0'],['gardenlight','庭园灯',90,90,'#202124'],['downpipe','雨水管',70,100,'#222326'],['shed','树脂物置（小）',1300,750,'#c9b89c'],['shed','树脂物置（大）',1800,900,'#c9b89c'],['car','轿车',1800,4700,'#9aa3ab']]},
   {cat:'宠物', items:[
     ['litter','大号猫砂盆',600,500,'#e7e2d8'],['catbowl','猫碗',500,300,'#d9cfc0'],['cattree','猫爬架',600,600,'#d8c3a5']]},
 ];
@@ -665,6 +670,9 @@ function buildDefs(){
     <pattern id="m-gravel" patternUnits="userSpaceOnUse" width="400" height="400"><rect width="400" height="400" fill="#d6d0c4"/><circle cx="60" cy="80" r="18" fill="#bdb6a8"/><circle cx="250" cy="150" r="14" fill="#c5beb1"/><circle cx="140" cy="300" r="20" fill="#b9b2a4"/><circle cx="330" cy="330" r="12" fill="#bdb6a8"/></pattern>
     <pattern id="m-concrete" patternUnits="userSpaceOnUse" width="3000" height="3000"><rect width="3000" height="3000" fill="#d9d6d0"/><path d="M0 0H3000M0 0V3000" stroke="#bdb9b2" stroke-width="20"/></pattern>
     <pattern id="m-asphalt" patternUnits="userSpaceOnUse" width="2000" height="2000"><rect width="2000" height="2000" fill="#8a8a8d"/></pattern>
+    <pattern id="m-stamp" patternUnits="userSpaceOnUse" width="900" height="900"><rect width="900" height="900" fill="#606367"/><path d="M0 120L260 60L420 300L180 420ZM420 300L700 180L860 420L600 560ZM180 420L420 560L360 820L80 760ZM600 560L860 640L800 900" stroke="#c9c9c5" stroke-width="14" fill="none"/></pattern>
+    <pattern id="m-greyplank" patternUnits="userSpaceOnUse" width="1800" height="360"><rect width="1800" height="360" fill="#dedcd8"/><path d="M0 0H1800M0 180H1800M1200 0V180M600 180V360" stroke="#c6c4bf" stroke-width="10"/></pattern>
+    <pattern id="m-ubfloor" patternUnits="userSpaceOnUse" width="150" height="150"><rect width="150" height="150" fill="#77787b"/><circle cx="40" cy="40" r="10" fill="#6c6d70"/><circle cx="110" cy="110" r="10" fill="#6c6d70"/></pattern>
     <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6f675b"/></marker>
     <pattern id="grid" patternUnits="userSpaceOnUse" width="1000" height="1000">
       <path d="M500 0V1000M0 500H1000" stroke="#e5dfd3" stroke-width="8"/><path d="M0 0V1000M0 0H1000" stroke="#d8d0c1" stroke-width="14"/></pattern>`;
@@ -782,6 +790,13 @@ function furnSVG(t,w,d,c,o={}){
     case 'lsofa': { const k = Math.min(800, d*.55, w*.42); return `<path d="M${x} ${y}H${x+w}V${y+k}H${x+k}V${y+d}H${x}Z" fill="${c||'#cdbfa8'}" ${ST}/>` + rc(x+20,y+20,w-40,180,shade(c||'#cdbfa8',.85)) + rc(x+20,y+20,180,d-40,shade(c||'#cdbfa8',.85)); }
     case 'ychair': return rc(x+30,y+40,w-60,d-70,c||'#d9c9ad','rx="40"') + pa(`M${x+30} ${y+60}Q0 ${y-60} ${x+w-30} ${y+60}`,'none','stroke-width="3"');
     case 'ovaltable': return rc(x,y,w,d,c||'#b88a5e',`rx="${d/2}"`);
+    case 'tray': { const n = o.beams ?? 2; let s = rc(x,y,w,d,'none','stroke-dasharray="60 40" stroke-width="8" opacity=".55"'); for (let i = 0; i < n; i++){ const t = o.bpos && o.bpos.length === n ? o.bpos[i] : (i+1)/(n+1); s += rc(x, y + d*t - 55, w, 110, 'none', DASH); } return s; }
+    case 'tilewall': return rc(x,y,w,d,c||'#3c3e41');
+    case 'bathkit': return rc(x,y,w,d,'#9aa0a6','fill-opacity=".35"') + `<circle cx="${-w*.1}" cy="${y+d*.5}" r="30" fill="#ccc" ${ST}/>`;
+    case 'shutter': return rc(x,y,w,d,c||'#26272a','fill-opacity=".85"');
+    case 'gardentap': return ec(-30,y+d*.5+50,240,240,'#efebe0') + `<circle cx="0" cy="${y+60}" r="38" fill="#cbc4b0" ${ST}/>`;
+    case 'gardenlight': return `<circle r="${Math.max(w/2, 40)}" fill="#f7f5ef" ${ST}/><circle r="20" fill="#202124"/>`;
+    case 'downpipe': return `<circle r="${Math.max(w/2, 35)}" fill="${c||'#222326'}" ${ST}/>`;
     case 'tvlift': { const tw = (o.tv ?? 75)*22.26; return rc(x,y,w,d,c||'#6b4a33','rx="20"') + rc(-60,y+30,120,110,'#3a2c22') + rc(-tw/2,y+150,tw,45,'#18181a'); }
     case 'tvcart': return rc(-w*.31,y,w*.62,d,'#e9e4da','rx="40"') + rc(x,-d*.1,w,40,'#18181a');
     case 'massage': return rc(x,y,w,d,c||'#9a6a45','rx="120"') + rc(x+w*.2,y+60,w*.6,d*.35,shade(c||'#9a6a45',.8),'rx="80"');
@@ -819,7 +834,7 @@ function furnSVG(t,w,d,c,o={}){
 }
 
 /* ======================= 渲染 ======================= */
-const NOLABEL = ['plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
+const NOLABEL = ['tray','tilewall','bathkit','shutter','gardentap','gardenlight','downpipe','plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
 function renderRooms(){
   let s = '';
   ROOMS.forEach(r => s += `<polygon class="room" data-room="${r.id}" points="${r.poly.map(p=>p.join(',')).join(' ')}" fill="url(#m-${state.rooms[r.id].mat})"/>`);
@@ -1138,6 +1153,9 @@ const FOPTS = {
   tvcart: [['tv','电视尺寸','TV size','sel',[[1231,'55 寸'],[1447,'65 寸'],[1671,'75 寸'],[1890,'85 寸'],[1450,'原始（约 65 寸）']]], ['y','屏幕中心高 mm','Screen center mm','range',800,1400,10,1100]],
   recliner:[['seats','座位数','Seats','sel',[[2,'2 人'],[3,'3 人']]], ['leather','皮革','Leather','chk',true]],
   rosevine:[['top','栏杆高 mm','Fence height mm','range',600,1500,50,900]],
+  shutter:[['close','放下程度','Closed','range',0,1,.05,0]],
+  tray:   [['beams','化妆梁根数','Beams','sel',[[0,'无'],[1,'1 根'],[2,'2 根'],[3,'3 根']]], ['dep','凹进深度 mm','Recess mm','range',60,300,10,120]],
+  gardenlight:[['h','高度 mm','Height mm','range',400,1200,10,700]],
 };
 function optsHTML(f){
   const L = FOPTS[f.type]; if (!L) return '';
@@ -1810,7 +1828,7 @@ function init(){
 
   const pm = new THREE.PMREMGenerator(renderer); envTex = pm.fromScene(new RoomEnvironment(), .04).texture; pm.dispose();
   glassMat = new THREE.MeshPhysicalMaterial({color:0xcfe6ef, roughness:.05, transparent:true, opacity:.28, depthWrite:false, side:THREE.DoubleSide});
-  wallMat = mat(PLAN.style?.wall || '#f4f1eb', {roughness:.92}); capMat = mat('#34312d', {roughness:.9}); frameMat = mat('#5d6166', {roughness:.5, metalness:.4});
+  wallMat = mat(PLAN.style?.wall || '#f4f1eb', {roughness:.92}); capMat = mat('#34312d', {roughness:.9}); frameMat = mat(PLAN.style?.frame || '#5d6166', {roughness:.5, metalness:.4});
 
   archFloor = new THREE.Group(); archUp = new THREE.Group(); furnG = new THREE.Group(); labelG = new THREE.Group(); lampG = new THREE.Group();
   scene.add(archFloor, archUp, furnG, labelG, lampG);
@@ -1896,12 +1914,13 @@ const TEX = {
   tatami:{sx:.91, sy:1.82, base:'#cfd29c', grout:'#a7aa70', rough:.9},
   pale:{sx:1.8, sy:.36, base:'#e8e2d7', rough:.5}, ryukyu:{sx:.91, sy:.91, base:'#ccd1ba', grout:'#b4b99f', rough:.9},
   grass:{sx:1, sy:1, base:'#8fae6a', rough:1}, wild:{sx:1.4, sy:1.4, base:'#a8a27a', rough:1}, gravel:{sx:.6, sy:.6, base:'#cdc7bb', rough:1}, concrete:{sx:3, sy:3, base:'#cfccc6', grout:'#b9b5ae', rough:.85}, asphalt:{sx:2, sy:2, base:'#6f6f72', rough:.95},
+  stamp:{sx:2.2, sy:2.2, base:'#5f6266', rough:.75}, greyplank:{sx:1.8, sy:.36, base:'#dddbd7', rough:.45}, ubfloor:{sx:.3, sy:.3, base:'#6f7073', rough:.85},
 };
 const floorMats = {};
 function floorMat(kind){
   if (floorMats[kind]) return floorMats[kind];
   const s = TEX[kind] || TEX.tile800, R = rng(kind.length*977 + 13), cv = document.createElement('canvas');
-  const wood = kind === 'wood' || kind === 'walnut' || kind === 'pale';
+  const wood = kind === 'wood' || kind === 'walnut' || kind === 'pale' || kind === 'greyplank', pale = kind === 'pale' || kind === 'greyplank';
   cv.width = wood ? 1024 : 512; cv.height = wood ? 205 : 512;
   const g = cv.getContext('2d'), W = cv.width, Hh = cv.height;
   g.fillStyle = s.base; g.fillRect(0, 0, W, Hh);
@@ -1910,18 +1929,32 @@ function floorMat(kind){
     for (let r = 0; r < 2; r++){
       let x0 = 0;
       [...joints[r], W].forEach(x1 => {
-        g.fillStyle = rgbK(s.base, kind === 'pale' ? .975 + R()*.05 : .9 + R()*.2); g.fillRect(x0, r*rowH, x1-x0, rowH);
+        g.fillStyle = rgbK(s.base, pale ? .975 + R()*.05 : .9 + R()*.2); g.fillRect(x0, r*rowH, x1-x0, rowH);
         g.strokeStyle = rgbK(s.base, .8); g.globalAlpha = .35; g.lineWidth = 1.2;
         for (let k = 0; k < 7; k++){ const y = r*rowH + 6 + R()*(rowH-12); g.beginPath(); g.moveTo(x0, y);
           for (let x = x0; x <= x1; x += 40) g.lineTo(x, y + Math.sin(x*.02 + k)*2.5); g.stroke(); }
-        g.globalAlpha = 1; g.fillStyle = rgbK(s.base, kind === 'pale' ? .86 : .62); g.fillRect(x1-1.5, r*rowH, 3, rowH); x0 = x1;
+        g.globalAlpha = 1; g.fillStyle = rgbK(s.base, pale ? .86 : .62); g.fillRect(x1-1.5, r*rowH, 3, rowH); x0 = x1;
       });
-      g.fillStyle = rgbK(s.base, kind === 'pale' ? .86 : .62); g.fillRect(0, r*rowH, W, 2.5);
+      g.fillStyle = rgbK(s.base, pale ? .86 : .62); g.fillRect(0, r*rowH, W, 2.5);
     }
   } else if (kind === 'grass' || kind === 'wild'){
     for (let k = 0; k < 2600; k++){ g.fillStyle = `rgba(${40+R()*40|0},${90+R()*60|0},${30+R()*30|0},${.25+R()*.35})`; g.fillRect(R()*W, R()*Hh, 2, 4 + R()*5); }
   } else if (kind === 'gravel'){
     for (let k = 0; k < 2200; k++){ const v = 150 + R()*90 | 0; g.fillStyle = `rgb(${v},${v-6},${v-14})`; g.beginPath(); g.arc(R()*W, R()*Hh, 1.5 + R()*3, 0, 7); g.fill(); }
+  } else if (kind === 'stamp'){                 // 压花混凝土：随机石板（可平铺的 Voronoi）+ 浅色勾缝
+    const N = 26, pts = [...Array(N)].map(() => [R()*W, R()*Hh, .86 + R()*.3]), id = g.getImageData(0, 0, W, Hh), D = id.data, b = new THREE.Color(s.base);
+    for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++){
+      let d1 = 1e9, d2 = 1e9, k1 = 0;
+      for (let i = 0; i < N; i++) for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++){
+        const dx = x - pts[i][0] - ox*W, dy = y - pts[i][1] - oy*Hh, dd = Math.sqrt(dx*dx + dy*dy);
+        if (dd < d1){ d2 = d1; d1 = dd; k1 = i; } else if (dd < d2) d2 = dd;
+      }
+      const o = (y*W + x)*4, edge = d2 - d1 < 3.2, n = .94 + Math.random()*.1;
+      if (edge){ D[o] = 205; D[o+1] = 205; D[o+2] = 200; }
+      else { const k = pts[k1][2]*n*(d2 - d1 < 7 ? .9 : 1); D[o] = b.r*255*k; D[o+1] = b.g*255*k; D[o+2] = b.b*255*k; }
+      D[o+3] = 255;
+    }
+    g.putImageData(id, 0, 0);
   } else if (kind === 'marble'){
     g.strokeStyle = 'rgba(160,150,135,.35)';
     for (let k = 0; k < 6; k++){ g.lineWidth = 1 + R()*3; g.beginPath(); g.moveTo(R()*W, 0); g.bezierCurveTo(R()*W, R()*Hh, R()*W, R()*Hh, R()*W, Hh); g.stroke(); }
@@ -2000,6 +2033,55 @@ const hwMat = () => mat('#b9b3a8', {metalness:.85, roughness:.3});
 const blackMetal = () => mat('#2b2b2d', {metalness:.6, roughness:.4});
 const mirror = () => mat('#dfeaee', {metalness:.55, roughness:.06});
 const ceramic = (o = {}) => mat('#fbfbf9', {roughness:.12, ...o});
+// 按真实尺寸平铺贴图的平面（UV 单位 = sx × sy 米），朝 +z
+function uvPlane(w, h, m, sx = 1, sy = 1){
+  const geo = new THREE.PlaneGeometry(w, h), uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i)*w/sx, uv.getY(i)*h/sy);
+  const o = new THREE.Mesh(geo, m); o.receiveShadow = true; return o;
+}
+const _cvM = {};
+function cvMat(key, W, Hh, draw, o = {}){
+  if (_cvM[key]) return _cvM[key];
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; draw(cv.getContext('2d'), W, Hh, rng(key.length*131 + 7));
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return _cvM[key] = new THREE.MeshStandardMaterial({map:t, roughness:o.rough ?? .8, metalness:o.metal ?? 0, side:o.side ?? THREE.FrontSide, ...(o.bump ? {bumpMap:t, bumpScale:o.bump} : {}), ...(o.glow ? {emissive:'#ffffff', emissiveMap:t, emissiveIntensity:o.glow} : {})});
+}
+// 外墙サイディング（浅灰石砖纹）：1024px = 1m，每行 40mm，砖长 120～450mm 错缝
+const sidingMat = c => cvMat('siding' + c, 1024, 1024, (g, W, Hh, R) => {
+  const b = new THREE.Color(c), col = k => `rgb(${b.r*255*k|0},${b.g*255*k|0},${b.b*255*k|0})`, rows = 25, rh = Hh/rows;
+  g.fillStyle = col(.6); g.fillRect(0, 0, W, Hh);
+  for (let r = 0; r < rows; r++){
+    let x = R()*W; const end = x + W;
+    while (x < end){
+      const L = (120 + R()*330)*W/1000, k = .9 + R()*.14, xx = x;
+      for (const sh of [0, -W]){ g.fillStyle = col(k); g.fillRect(xx + sh + 2, r*rh + 3, Math.min(L, end - x) - 3, rh - 4); g.fillStyle = col(k*1.05); g.fillRect(xx + sh + 2, r*rh + rh - 5, Math.min(L, end - x) - 3, 2); }
+      x += L;
+    }
+  }
+  for (let k = 0; k < 26000; k++){ g.fillStyle = `rgba(${R() < .5 ? '0,0,0' : '255,255,255'},${R()*.08})`; g.fillRect(R()*W, R()*Hh, 2, 2); }
+}, {rough:.9, bump:.6});
+// 整体浴室深色石纹墙板：1024px = 0.9m，每行 150mm，块宽 180～420mm，带浅色石纹
+const stoneMat = c => cvMat('stone' + c, 1024, 1024, (g, W, Hh, R) => {
+  const b = new THREE.Color(c), col = k => `rgb(${Math.min(255, b.r*255*k)|0},${Math.min(255, b.g*255*k)|0},${Math.min(255, b.b*255*k)|0})`, rows = 6, rh = Hh/rows, px = W/900;
+  for (let r = 0; r < rows; r++){
+    let x = R()*W; const end = x + W;
+    while (x < end){
+      const L = (180 + R()*240)*px, k = .8 + R()*.42;
+      for (const sh of [0, -W]){ g.fillStyle = col(k); g.fillRect(x + sh, r*rh, Math.min(L, end - x), rh); g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(x + sh, r*rh, 2, rh); }
+      x += L;
+    }
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, r*rh, W, 2);
+  }
+  g.lineCap = 'round';
+  for (let k = 0; k < 40; k++){ g.strokeStyle = `rgba(200,200,198,${.04 + R()*.08})`; g.lineWidth = .6 + R()*1.6; g.beginPath(); let x = R()*W, y = R()*Hh; g.moveTo(x, y);
+    for (let j = 0; j < 5; j++){ x += (R() - .3)*90; y += (R() - .5)*60; g.lineTo(x, y); } g.stroke(); }
+}, {rough:.35, glow:1.1});
+// 卷帘帘片：一片 60mm（v 方向一个周期）
+const slatMat = c => cvMat('slat' + c, 16, 64, (g, W, Hh) => {
+  const b = new THREE.Color(c), gr = g.createLinearGradient(0, 0, 0, Hh);
+  gr.addColorStop(0, '#' + b.clone().multiplyScalar(.55).getHexString()); gr.addColorStop(.12, '#' + b.clone().lerp(new THREE.Color('#fff'), .25).getHexString()); gr.addColorStop(1, '#' + b.clone().multiplyScalar(.85).getHexString());
+  g.fillStyle = gr; g.fillRect(0, 0, W, Hh);
+}, {rough:.45, metal:.3, side:THREE.DoubleSide});
 const fabric = c => mat(c, {roughness:.96});
 const woodM = c => mat(c, {roughness:.55});
 const screenMat = (glow = '#1a2636') => mat('#0b0e13', {roughness:.1, metalness:.3, emissive:glow, emissiveIntensity:.35});
@@ -2486,6 +2568,11 @@ function buildFurniture(f){
     }
     case 'bathtub': {
       const cer = ceramic(), h = .56, t = .07, cm = chrome();
+      if (f.unit){              // 整体浴室浴缸：圆润浴槽＋一端坐台、外侧白色裙板，龙头在墙上（不在缸上）
+        g.add(shell(w, d, h, .1, .38, cer), box(w - .1, .12, d - .1, cer, 0, 0, 0), rbox(w*.2, .2, d - .2, cer, w/2 - .1 - w*.1, .12, 0, .06));
+        g.add(box(w - .2, .004, d - .2, mat('#bfe0ea', {roughness:.03, transparent:true, opacity:.5}), 0, .4, 0), box(w, .04, .02, cer, 0, h - .04, d/2 - .01));
+        break;
+      }
       g.add(shell(w, d, h, t, .14, cer), box(w - .1, .12, d - .1, cer, 0, 0, 0), box(w - 2*t + .004, .004, d - 2*t + .004, mat('#bfe0ea', {roughness:.03, transparent:true, opacity:.6}), 0, .4, 0));
       const fx = w/2 - t/2;
       g.add(tube([[fx, h - .02, 0], [fx, h + .1, 0], [fx - .06, h + .13, 0], [fx - .13, h + .09, 0]], .014, cm));
@@ -3011,6 +3098,63 @@ function buildFurniture(f){
       vase(g, 0, T + .003, -.05, .055, .2, '#e9e2d6', R);
       break;
     }
+    case 'tray': {              // 折り上げ天井：天花开洞（buildArch 里扣掉），往上凹 f.dep，凹槽里横 f.beams 根化妆梁（沿宽度方向）
+      const D = (f.dep ?? 120)/1000, sc = PLAN.style?.ceiling || '#fbfaf7', cm = mat(sc, {roughness:1, emissive:sc, emissiveIntensity:.3, side:THREE.DoubleSide}), sm = mat(darker(sc, .9), {roughness:1, emissive:sc, emissiveIntensity:.08});
+      const tp = new THREE.Mesh(new THREE.PlaneGeometry(w, d), cm); tp.rotation.x = Math.PI/2; tp.position.y = H + D; g.add(tp);
+      [[w + .024, .012, 0, -d/2 - .006], [w + .024, .012, 0, d/2 + .006], [.012, d, -w/2 - .006, 0], [.012, d, w/2 + .006, 0]].forEach(([a, b, x, z]) => { const o = box(a, D, b, sm, x, H, z); o.castShadow = false; g.add(o); });
+      [[w + .05, .025, 0, -d/2 - .012], [w + .05, .025, 0, d/2 + .012], [.025, d + .05, -w/2 - .012, 0], [.025, d + .05, w/2 + .012, 0]].forEach(([a, b, x, z]) => { const o = box(a, .012, b, mat(sc, {roughness:.9}), x, H - .012, z); o.castShadow = false; g.add(o); });   // 凹槽口一圈细边线
+      const n = f.beams ?? 2, bw = (f.bw ?? 110)/1000, bh = Math.min((f.bh ?? 150)/1000, D + .1), wm = woodM(c || '#8a6446');
+      for (let i = 0; i < n; i++){ const t = f.bpos && f.bpos.length === n ? f.bpos[i] : (i + 1)/(n + 1); g.add(box(w, bh, bw, wm, 0, H + D - bh, -d/2 + d*t)); }
+      break;
+    }
+    case 'tilewall': {          // 整面贴墙板（整体浴室深色石纹墙）：宽 w 沿墙，贴墙一侧为 -z，石纹面朝 +z
+      const hh = f.h ? M(f.h) : H, y0 = (f.y ?? 0)/1000, dd = Math.max(.006, d);
+      g.add(box(w, hh - y0, dd - .002, mat(darker(c || '#3c3e41', .8), {roughness:.5}), 0, y0, -.001));
+      const p = uvPlane(w, hh - y0, stoneMat(c || '#3c3e41'), .9, .9); p.position.set(0, y0 + (hh - y0)/2, dd/2 + .001); g.add(p);
+      break;
+    }
+    case 'bathkit': {           // 整体浴室洗场墙：控制面板、淋浴滑杆＋花洒＋软管、恒温龙头、黑色台面、细长镜、黑色置物架（贴墙一侧 -z）
+      const cm = chrome(), bk = mat('#1b1c1e', {roughness:.3}), z0 = bz, xs = -w*.1;
+      g.add(rbox(.2, .12, .02, mat('#f5f5f3', {roughness:.4}), xs - .26, .98, z0 + .01, .01), box(.07, .03, .004, screenMat('#262626'), xs - .29, 1.03, z0 + .021));
+      g.add(cyl(.012, .012, .82, cm, xs, .8, z0 + .05, 14), box(.035, .035, .05, cm, xs, .79, z0 + .025), box(.035, .035, .05, cm, xs, 1.6, z0 + .025));
+      g.add(rod([xs, 1.36, z0 + .085], [xs, 1.54, z0 + .1], .016, cm));
+      const hd = cyl(.055, .05, .025, cm, 0, 0, 0, 28); hd.rotation.x = Math.PI/2 - .35; hd.position.set(xs, 1.58, z0 + .13); g.add(hd);
+      g.add(tube([[xs, 1.36, z0 + .085], [xs + .02, 1.0, z0 + .1], [xs + .07, .62, z0 + .11], [xs + .16, .6, z0 + .1], [xs + .2, .72, z0 + .07]], .008, mat('#c9ccce', {metalness:.8, roughness:.35}), 50));
+      g.add(rbox(.46, .065, .07, cm, w*.14, .7, z0 + .035, .02), box(.2, .045, .072, mat('#1f2022', {roughness:.3}), w*.14, .71, z0 + .037));
+      [-1, 1].forEach(s => { const k = cyl(.032, .032, .05, cm, 0, 0, 0, 20); k.rotation.x = Math.PI/2; k.position.set(w*.14 + s*.26, .732, z0 + .05); g.add(k); });
+      g.add(rbox(w*.62, .022, .14, bk, w*.12, .8, z0 + .07, .008));
+      g.add(box(.27, 1.06, .006, cm, w*.2, .84, z0 + .003), box(.25, 1.04, .006, mirror(), w*.2, .85, z0 + .008));
+      [1.0, 1.24].forEach(y => g.add(rbox(.2, .022, .12, bk, w/2 - .12, y, z0 + .06, .006), box(.2, .03, .006, bk, w/2 - .12, y + .02, z0 + .118)));
+      break;
+    }
+    case 'shutter': {           // 外置电动卷帘：顶部卷帘盒＋两侧导轨＋帘片（close 0 = 全收起，1 = 全放下）；背面贴外墙（-z）
+      const bm = mat(c || '#26272a', {roughness:.45, metalness:.35}), hd = (f.head ?? 2000)/1000, sl = (f.sill ?? 0)/1000, cl = Math.max(0, Math.min(1, f.close ?? 0)), ch = (hd - sl)*cl;
+      g.add(rbox(w, .25, d, bm, 0, hd, 0, .012));
+      [-1, 1].forEach(s => g.add(box(.05, hd - sl, .075, bm, s*(w/2 - .025), sl, bz + .0375)));
+      if (ch > .01){ const p = uvPlane(w - .09, ch, slatMat(c || '#26272a'), 1, .06); p.position.set(0, hd - ch/2, bz + .045); g.add(p); }
+      g.add(box(w - .09, .035, .03, bm, 0, hd - ch, bz + .045));
+      break;
+    }
+    case 'gardentap': {         // 立水栓（香槟色不锈钢柱＋镀铬十字把龙头）＋白色石材水盆
+      const pm = mat(c || '#cbc4b0', {metalness:.7, roughness:.3}), cm = chrome(), pz = bz + .05, sm = mat('#efebe0', {roughness:.85});
+      g.add(cyl(.035, .035, .88, pm, 0, 0, pz, 24), lathe([[.036, 0], [.036, .006], [.03, .026], [.012, .038], [0, .04]], cm, 0, .88, pz, 24));
+      g.add(rod([0, .7, pz], [0, .7, pz + .08], .015, cm), tube([[0, .7, pz + .07], [0, .7, pz + .1], [0, .67, pz + .125], [0, .6, pz + .13]], .011, cm, 20));
+      g.add(rod([0, .71, pz + .055], [0, .76, pz + .055], .006, cm), rod([-.032, .76, pz + .055], [.032, .76, pz + .055], .006, cm), rod([0, .76, pz + .025], [0, .76, pz + .085], .006, cm));
+      g.add(lathe([[0, 0], [.17, 0], [.21, .06], [.235, .16], [.24, .21], [.228, .22], [.212, .2], [.2, .12], [.16, .05], [0, .04]], sm, -.03, 0, pz + .3, 48));
+      g.add(cyl(.03, .03, .004, metal(), -.03, .041, pz + .3, 20), cyl(.012, .012, .02, mat('#2a2a2a'), .05, .041, pz + .25, 12));
+      break;
+    }
+    case 'gardenlight': {       // 庭园灯：黑色细柱＋乳白圆筒灯罩
+      const bm = mat(c || '#202124', {roughness:.5, metalness:.4}), hh = (f.h ?? 700)/1000;
+      g.add(cyl(.038, .038, hh - .18, bm, 0, 0, 0, 20), cyl(.045, .045, .18, glowMat('#f7f5ef', '#fff1d6', .3), 0, hh - .18, 0, 28), cyl(.04, .04, .01, bm, 0, hh - .19, 0, 20));
+      break;
+    }
+    case 'downpipe': {          // 竖向雨水管（黑）：贴外墙，每 0.9m 一个管卡
+      const bm = mat(c || '#222326', {roughness:.5, metalness:.3}), hh = (f.h ?? 2700)/1000;
+      g.add(cyl(.032, .032, hh, bm, 0, 0, 0, 16)); for (let y = .7; y < hh; y += .9) g.add(box(.075, .02, d/2, bm, 0, y, bz + d/4));
+      g.add(rot(cyl(.032, .032, .12, bm, 0, -.06, 0, 16), Math.PI/2));
+      break;
+    }
     case 'tvlift': {            // 电动升降电视架（W150 D40，ミドルブラウン）：矮柜底座 + 后部立柱（木套＋黑钢升降柱）+ VESA 挂架 + 电视；屏幕朝 +z
       const inch = f.tv ?? 75, tvw = inch*.02226, th = tvw*.5715, yc = (f.lift ?? 1080)/1000, sw = (f.swivel ?? 0)*Math.PI/180;
       const wm = woodM(c || '#6b4a33'), dk = mat(darker(c || '#6b4a33', .55), {roughness:.7}), st = mat('#1c1c1e', {roughness:.45, metalness:.5}), bh = .2, pz = -d/2 + .1;
@@ -3079,7 +3223,7 @@ function buildFurniture(f){
     }
     case 'drum': {              // 褶皱布艺吸顶灯（低吊，适合 2.4m 层高）
       const r = w/2, h = (f.h ?? 260)/1000, y = H - (f.drop ?? 300)/1000, n = 36, sh = glowMat(c || '#f3eadb', '#ffdcaa', .75);
-      g.add(rod([0, H, 0], [0, y + h, 0], .006, mat('#c9b79c', {metalness:.4, roughness:.4})));
+      g.add(rod([0, H + (f.up ?? 0)/1000, 0], [0, y + h, 0], .006, mat('#c9b79c', {metalness:.4, roughness:.4})));
       for (let k = 0; k < n; k++){ const a = k*Math.PI*2/n, p = new THREE.Group(); p.add(box(2*Math.PI*r/n*1.15, h, .012, sh, 0, 0, r)); p.position.y = y; p.rotation.y = a + (k % 2 ? .12 : -.12); g.add(p); }
       g.add(cyl(r*.98, r*.98, .006, glowMat('#fff6e6', '#ffe6bd', 1.1), 0, y + .02, 0, 36));
       break;
@@ -3192,9 +3336,24 @@ function shadowBox([x0, y0, x1, y1], yb, yt){
 const edgeMat = new THREE.LineBasicMaterial({color:0x6f675b}), skirtMat = new THREE.MeshStandardMaterial({color:'#8b7f6e', roughness:.6});
 function shapeOf(poly, flip){ const s = new THREE.Shape(); poly.forEach(([x, y], i) => s[i ? 'lineTo' : 'moveTo'](wx(x), flip ? wz(y) : -wz(y))); return s; }
 
+const pip = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi)*(y - yi)/(yj - yi) + xi) c = !c; } return c; };
+const trayCorners = f => { const a = (f.rot || 0)*Math.PI/180, c = Math.cos(a), s = Math.sin(a); return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([u, v]) => [f.cx + c*u*f.w/2 - s*v*f.d/2, f.cy + s*u*f.w/2 + c*v*f.d/2]); };
+// 外墙面贴サイディング（PLAN.style.siding 有值才贴）：墙的哪一面外侧 25cm 不在任何室内房间里，就是外墙面
+function extSkin([x0, y0, x1, y1], yb, yt){
+  const sc = PLAN.style?.siding; if (!sc || yt - yb < .01) return;
+  const hz = (x1 - x0) >= (y1 - y0), L = M(hz ? x1 - x0 : y1 - y0), mid = hz ? (x0 + x1)/2 : (y0 + y1)/2;
+  [-1, 1].forEach(s => {
+    const fc = hz ? (s < 0 ? y0 : y1) : (s < 0 ? x0 : x1), px = hz ? mid : fc + s*250, py = hz ? fc + s*250 : mid;
+    if (ROOMS.some(r => !r.outdoor && pip(px, py, r.poly))) return;
+    const p = uvPlane(L, yt - yb, sidingMat(sc), 1, 1);
+    p.position.set(hz ? wx(mid) : wx(fc) + s*.003, (yb + yt)/2, hz ? wz(fc) + s*.003 : wz(mid));
+    p.rotation.y = hz ? (s > 0 ? 0 : Math.PI) : (s > 0 ? Math.PI/2 : -Math.PI/2);
+    archUp.add(p);
+  });
+}
 function buildArch(){
   clearGroup(archFloor); clearGroup(archUp); lampG.clear(); doors.length = 0; colliders = [];
-  const top = opt.cut;
+  const top = opt.cut, trays = state.furniture.filter(f => f.type === 'tray');
   ROOMS.forEach(r => {
     const m = floorMat(state.rooms[r.id].mat), bay = !!r.bay;
     const geo = bay ? new THREE.ExtrudeGeometry(shapeOf(r.poly), {depth:.45, bevelEnabled:false}) : new THREE.ShapeGeometry(shapeOf(r.poly));
@@ -3203,13 +3362,16 @@ function buildArch(){
     fl.receiveShadow = true; fl.userData.room = r.id;
     if (bay){ fl.castShadow = true; archUp.add(fl); } else archFloor.add(fl);
     // 天花：法线朝下，只在室内仰视时可见
-    const cg = new THREE.ShapeGeometry(shapeOf(r.poly, true)); cg.rotateX(Math.PI/2);
+    const cs = shapeOf(r.poly, true);
+    trays.filter(t => pip(t.cx, t.cy, r.poly)).forEach(t => cs.holes.push(new THREE.Path(trayCorners(t).map(([x, y]) => new THREE.Vector2(wx(x), wz(y))))));
+    const cg = new THREE.ShapeGeometry(cs); cg.rotateX(Math.PI/2);
     if (r.outdoor) return;                         // 户外：只铺地面，不加天花和顶灯
     { const sg = new THREE.ExtrudeGeometry(shapeOf(r.poly), {depth:.12, bevelEnabled:false}); sg.rotateX(-Math.PI/2); const so = new THREE.Mesh(sg, shadowMat); so.position.y = H + .005; shadowOnly(so); }   // 天花遮光
     const ceil = new THREE.Mesh(cg, mat(PLAN.style?.ceiling || '#fbfaf7', PLAN.style ? {roughness:1, emissive:PLAN.style.ceiling, emissiveIntensity:.32} : {roughness:1})); ceil.position.y = H; ceil.visible = top >= H; archUp.add(ceil);
     if (r.at){
       const lamp = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .02, 32), new THREE.MeshStandardMaterial({color:'#fff', emissive:'#fff2d6', emissiveIntensity:.3}));
-      lamp.position.set(wx(r.at[0]), H - .012, wz(r.at[1])); lamp.visible = top >= H; lampG.add(lamp);
+      const tIn = trays.find(t => pip(r.at[0], r.at[1], trayCorners(t)));   // 顶灯落在折上天井里：贴凹槽顶
+      lamp.position.set(wx(r.at[0]), H - .012 + (tIn ? (tIn.dep ?? 120)/1000 : 0), wz(r.at[1])); lamp.visible = top >= H && !tIn; lampG.add(lamp);
       const pl = new THREE.PointLight(0xffd9a8, 0, 7, 1.6); pl.position.set(wx(r.at[0]), H - .25, wz(r.at[1])); lampG.add(pl);
     }
   });
@@ -3231,6 +3393,7 @@ function buildArch(){
   WALLS.forEach((w, i) => {
     if (state.demolished.includes('w'+i)) return;
     wallBox(w, 0, w[4] === 'low' ? Math.min(1, top) : top);
+    if (w[4] === 'e') extSkin(w, 0, top);
     if (w[4] !== 'low' && top < H) shadowBox(w, top, H);            // 剖切掉的上半截墙仍然挡光
     colliders.push([wx(w[0]), wz(w[1]), wx(w[2]), wz(w[3])]);
   });
@@ -3254,6 +3417,7 @@ function buildArch(){
   WINS.forEach((r, i) => {
     const sill = r[4] ?? .9, head = r[5] ?? 2.4;
     wallBox(r, 0, Math.min(sill, top)); if (top > head) wallBox(r, head, top);
+    extSkin(r, 0, Math.min(sill, top)); if (top > head) extSkin(r, head, top);
     if (top < H){ if (sill > top) shadowBox(r, top, sill); shadowBox(r, Math.max(head, top), H); }
     colliders.push([wx(r[0]), wz(r[1]), wx(r[2]), wz(r[3])]);
     const gTop = Math.min(head, top); if (gTop <= sill) return;
@@ -3290,7 +3454,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['pendant', 'fan', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
+  const HIGH = ['tray', 'pendant', 'fan', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
@@ -3315,7 +3479,7 @@ function buildLabels(){
 // 只重建变化的部分
 function sync(force){
   if (!inited || (!active && !force)) return;
-  const a = JSON.stringify([state.rooms, state.demolished, opt.cut]), f = JSON.stringify([state.furniture, opt.cut < H - .01]), l = JSON.stringify([state.rooms, opt.cut]);
+  const a = JSON.stringify([state.rooms, state.demolished, opt.cut, state.furniture.filter(f => f.type === 'tray').map(f => [f.cx, f.cy, f.w, f.d, f.rot])]), f = JSON.stringify([state.furniture, opt.cut < H - .01]), l = JSON.stringify([state.rooms, opt.cut]);
   if (force || a !== sigArch){ sigArch = a; buildArch(); }
   if (force || f !== sigFurn){ sigFurn = f; buildFurn(); }
   if (force || l !== sigLabels){ sigLabels = l; buildLabels(); }
