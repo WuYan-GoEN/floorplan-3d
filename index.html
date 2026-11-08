@@ -2945,7 +2945,8 @@ function buildFurniture(f){
     }
     case 'paperlamp': {         // 和纸灯笼吊灯（AKARI 风）：竹骨横向肋 + 和纸灯罩，黑色细线
       const r = w/2, hh = (f.h ?? 450)/1000, y = H - (f.drop ?? 700)/1000, paper = glowMat('#f8f2e6', '#ffe1b0', .85);
-      g.add(rod([0, H, 0], [0, y + hh, 0], .003, mat('#1d1d1d')), cyl(.035, .035, .012, mat('#1d1d1d'), 0, H - .012, 0, 16));
+      const H1 = H + (f.up ?? 0)/1000;   // 挂在折上天井里时，吊线从凹槽顶开始
+      g.add(rod([0, H1, 0], [0, y + hh, 0], .003, mat('#1d1d1d')), cyl(.035, .035, .012, mat('#1d1d1d'), 0, H1 - .012, 0, 16));
       const pts = []; for (let i = 0; i <= 16; i++){ const t = i/16; pts.push([r*Math.sin(Math.PI*(.06 + .88*t))*(f.shape === 'oval' ? 1 : .95), hh*t]); }
       g.add(lathe(pts, paper, 0, y, 0, 48));
       const rib = mat('#d9cdb8', {roughness:.8});
