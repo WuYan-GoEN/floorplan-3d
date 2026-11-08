@@ -2605,6 +2605,21 @@ function buildFurniture(f){
       break;
     }
     case 'washer': case 'dryer': {
+      if (f.model === 'lx123f'){  // Panasonic NA-LX123F 滚筒洗烘一体（W604×D732×H1038）：顶部热泵单元＋顶盖、前上操作条、大圆门（白圈＋烟色玻璃）、下部检修盖
+        const hh = (f.h ?? 1038)/1000, bm = mat(c || '#f3f3f1', {roughness:.55}), fz = d/2, gy = mat('#d9dbdc', {roughness:.5}), dy = .52;
+        g.add(box(w - .03, .03, d - .05, mat('#9aa0a4'), 0, 0, -.02), rbox(w, hh - .03, d, bm, 0, .03, 0, .02));
+        g.add(box(w - .02, .004, d*.55, gy, 0, hh + .0005, -d*.2), box(.004, .004, d*.4, gy, -w*.18, hh + .001, d*.27), box(w - .02, .004, .004, gy, 0, hh + .001, d*.07));   // 顶盖分缝
+        g.add(box(w - .03, .15, .004, mat('#f7f7f5', {roughness:.35}), 0, hh - .2, fz + .002), box(.11, .035, .003, screenMat('#151515'), .02, hh - .13, fz + .005));
+        for (let i = 0; i < 7; i++) g.add(box(.05, .004, .002, mat('#9da2a6'), -w/2 + .07 + i*.075 + (i > 2 ? .1 : 0), hh - .175, fz + .005));
+        [[w/2 - .08, .045], [w/2 - .15, .035]].forEach(([x, r]) => g.add(rbox(r, r*.8, .006, mat('#eeeeec'), x, hh - .15, fz + .005, .004)));
+        g.add(box(w - .03, .003, .003, gy, 0, hh - .215, fz + .002), box(w - .03, .003, .003, gy, 0, .16, fz + .002));      // 面板分缝
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(.215, .035, 16, 64), mat('#fafaf8', {roughness:.3})); ring.position.set(0, dy, fz + .02); g.add(ring);
+        const inner = new THREE.Mesh(new THREE.TorusGeometry(.172, .012, 12, 64), mat('#bfc4c8', {roughness:.3, metalness:.4})); inner.position.set(0, dy, fz + .03); g.add(inner);
+        const gl = new THREE.Mesh(new THREE.CircleGeometry(.17, 48), mat('#26292c', {roughness:.08, metalness:.2})); gl.position.set(0, dy, fz + .028); g.add(gl);
+        const bowl = new THREE.Mesh(new THREE.SphereGeometry(.2, 32, 12, 0, Math.PI*2, 0, .55), mat('#3a4046', {roughness:.05, transparent:true, opacity:.55})); bowl.rotation.x = Math.PI/2; bowl.position.set(0, dy, fz + .028 - .2*Math.cos(.55)); g.add(bowl);
+        g.add(rbox(.03, .09, .012, mat('#e8e8e6'), .245, dy - .045, fz + .01, .006));      // 门把手
+        break;
+      }
       const bm = mat(c, {roughness:.35}), R0 = Math.min(w, d)*.25, fz = d/2 - .02;
       g.add(box(w - .02, .04, d - .04, '#8f969b', 0, 0, -.02), rbox(w, .81, d - .02, bm, 0, .04, -.01, .025));
       g.add(box(w - .04, .1, .006, lighter(c, .3), 0, .72, fz + .003), rbox(.18, .07, .01, bm, -w/2 + .12, .735, fz + .006, .004));
