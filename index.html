@@ -552,7 +552,7 @@ const LIB = [
     ['kboard','餐边柜 灰褐石纹1600',1600,490,'#9a8a7c',{h:1970, tex:'gp1600'}],
     ['kboard','餐边柜 カイト160 浅灰石纹',1610,510,'#cfc8bf',{h:1974, tex:'kite160'}],
     ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
-    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],['kbstone','ニトリ 石目柄キッチンボード 140 ライトグレー',1400,500,'#cfcdcc',{h:1830, ch:880}],
+    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],['ligare180','餐边柜 ニトリ リガーレ180 BK（3D，含家电）',1800,420,'#2a2a2c',{h:2020}],['kbstone','ニトリ 石目柄キッチンボード 140 ライトグレー',1400,500,'#cfcdcc',{h:1830, ch:880}],
     ['kboard','餐边柜 ニトリ リガーレ160 白（照片贴图）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
     ['fridge','冰箱 Panasonic 六门 白',660,720,'#f6f6f3',{model:'pana6', h:1828}],
     ['microwave','微波炉 SHARP 水波炉',487,400,'#f4f4f2'],['airfryer','空气炸锅 COSORI',260,340,'#efebe2'],['ricecooker','电饭煲 象印',255,345,'#f5f4f1'],
@@ -826,6 +826,7 @@ function furnSVG(t,w,d,c,o={}){
     case 'plainrug': return rc(x,y,w,d,c||'#d4ccbf','rx="40" fill-opacity=".8"');
     case 'sledtable': return rc(x,y,w,d,c||'#d9a86c','rx="60"') + ln(x+300,y+40,x+300,y+d-40,DASH) + ln(x+w-300,y+40,x+w-300,y+d-40,DASH);
     case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
+    case 'ligare180': return rc(x,y,w,d,c||'#2a2a2c') + rc(x,y,w,d*(o.ud??370)/420,'#4a4a4c','opacity=".6"') + ln(x+w/3,y+d*.85,x+w/3,y+d) + ln(x+w*2/3,y+d*.85,x+w*2/3,y+d);
     case 'kbstone': return rc(x,y,w,d,c||'#cfcdcc') + rc(x,y,w,d*(o.ud??400)/500,'#e4e2e0','opacity=".7"') + ln(x+w*.22,y+d*.8,x+w*.22,y+d) + ln(x+w*.71,y+d*.8,x+w*.71,y+d);
     case 'ligare': return rc(x,y,w,d,c||'#f1efea') + rc(x,y,w,d*.78,'#e9e6e0','opacity=".6"') + ln(x+400,y,x+400,y+d) + ln(x+1000,y,x+1000,y+d) + ln(x,y+d-25,x+w,y+d-25,'stroke-width="5"');
     case 'microwave': case 'airfryer': case 'ricecooker': return rc(x,y,w,d,'#f4f4f2','rx="30"') + rc(x+20,y+d-50,w-40,40,'#222');
@@ -3014,6 +3015,39 @@ function buildFurniture(f){
       // 台面上：微波炉（左）、空气炸锅（右）
       applMicrowave(g, -w/2 + .3, ch, cz - .23);
       applAirFryer(g, w/4 + .05, ch, cz - .2);
+      break;
+    }
+    case 'ligare180': {         // ニトリ 組み合わせキッチンボード リガーレ 180（W180×D42×H202）：上台 2 扇烟色玻璃门 + 开放台面区；下台 左 60 开放（无底板，放垃圾桶/推车）、中 60 三抽、右 60 家电格＋两抽
+      const bm = lightGrain(c || '#2a2a2c'), dk = mat(darker(c || '#2a2a2c', .7), {roughness:.6}), top = mat(lighter(c || '#2a2a2c', .06), {roughness:.55}), gr = mat('#55575a', {metalness:.6, roughness:.35});
+      const H2 = (f.h ?? 2020)/1000, ch = (f.ch ?? 950)/1000, uy = (f.uy ?? 1400)/1000, ud = Math.min(d, (f.ud ?? 370)/1000), cz = d/2, bz2 = -d/2, uz = -d/2 + ud/2, X0 = -w/2, u = (w - .036)/3, pl = .05;
+      const fr = (x, y, ww, hh, hd = true) => { g.add(rbox(ww - .006, hh - .006, .02, bm, x, y + .003, cz - .01, .003)); if (hd) g.add(box(ww - .006, .006, .022, gr, x, y + hh - .012, cz - .009)); };
+      // 柜体：两侧板 + 背板 + 中间隔板 + 台面
+      g.add(box(.018, ch - .03, d, bm, X0 + .009, 0, 0), box(.018, ch - .03, d, bm, w/2 - .009, 0, 0), box(w, ch - .03, .01, dk, 0, 0, bz2 + .005));
+      [X0 + .018 + u, X0 + .018 + 2*u].forEach(x => g.add(box(.018, ch - .03, d - .02, bm, x, 0, -.01)));
+      g.add(rbox(w, .03, d + .01, top, 0, ch - .03, .005, .004));
+      const a1 = X0 + .018 + u/2, a2 = a1 + u, a3 = a2 + u, th = .15, ty = ch - .03 - th;
+      // 左 60：顶部抽屉 + 下面开放（无底板），放两只黑色分类垃圾桶
+      fr(a1, ty, u, th); g.add(box(u, .018, d - .03, bm, a1, ty - .018, -.01));
+      [-1, 1].forEach(s2 => g.add(rbox(.27, .58, .37, mat('#1e1f21', {roughness:.45}), a1 + s2*.145, 0, .0, .02), rbox(.28, .04, .38, mat('#2c2d30', {roughness:.4}), a1 + s2*.145, .58, 0, .012)));
+      // 中 60：三抽
+      g.add(box(u, pl, d - .04, dk, a2, 0, -.02)); fr(a2, ty, u, th); const mh = .22; fr(a2, ty - mh, u, mh); fr(a2, pl, u, ty - mh - pl);
+      // 右 60：家电格（滑出板，放电饭煲）+ 两抽
+      g.add(box(u, pl, d - .04, dk, a3, 0, -.02)); const nh = .27, ny = ch - .03 - nh;
+      g.add(box(u, .018, d - .04, bm, a3, ny, -.01), box(u - .02, .02, .025, bm, a3, ny + .018, cz - .02)); applRiceCooker(g, a3, ny + .02, .0);
+      fr(a3, ny - .14, u, .14); fr(a3, pl, u, ny - .14 - pl);
+      // 上台：侧板、背板、顶板、底板
+      g.add(box(w, H2 - ch, .012, dk, 0, ch, bz2 + .006));
+      [X0 + .009, w/2 - .009].forEach(x => g.add(box(.018, H2 - ch, ud, bm, x, ch, uz)));
+      g.add(box(w, .02, ud, bm, 0, H2 - .02, uz), box(w, .025, ud, bm, 0, uy, uz), box(.018, H2 - uy, ud, bm, 0, uy, uz));
+      // 两扇烟色玻璃门（黑框）
+      const gl = mat('#3b3d40', {roughness:.12, metalness:.2, transparent:true, opacity:.88});
+      [-1, 1].forEach(s2 => { const x = s2*w/4, ww = w/2 - .03, hh = H2 - uy - .05; g.add(box(ww - .05, hh - .05, .005, gl, x, uy + .05, uz + ud/2 - .012));
+        [[ww, .025, 0, uy + .025], [ww, .025, 0, H2 - .05]].forEach(([a, b, dx, y]) => g.add(box(a, b, .02, bm, x + dx, y, uz + ud/2 - .01)));
+        [-1, 1].forEach(s3 => g.add(box(.025, hh, .02, bm, x + s3*(ww/2 - .0125), uy + .025, uz + ud/2 - .01))); });
+      for (let i = 0; i < 6; i++) g.add(cyl(.045, .04, .09, mat(i % 2 ? '#e8e5df' : '#9a9690', {roughness:.3}), -w/2 + .2 + i*.28, uy + .03, uz, 18));
+      // 台面区：插座 + 微波炉（左）、空气炸锅（右）
+      [-1, 1].forEach(s2 => g.add(rbox(.045, .07, .01, mat('#2f3033', {roughness:.4}), s2*(w/2 - .1), ch + .12, bz2 + .016, .004)));
+      applMicrowave(g, -w/2 + .3, ch, cz - .23); applAirFryer(g, .05, ch, cz - .2);
       break;
     }
     case 'microwave': applMicrowave(g, 0, (f.y ?? 0)/1000, 0, w, d, (f.h ?? 345)/1000); break;
