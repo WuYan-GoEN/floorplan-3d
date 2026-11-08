@@ -552,7 +552,7 @@ const LIB = [
     ['kboard','餐边柜 灰褐石纹1600',1600,490,'#9a8a7c',{h:1970, tex:'gp1600'}],
     ['kboard','餐边柜 カイト160 浅灰石纹',1610,510,'#cfc8bf',{h:1974, tex:'kite160'}],
     ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
-    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],['imtable','餐桌 ニトリ IM301H 150 LBR/BK（高 75）',1500,900,'#c9a274',{h:750}],['ligare180','餐边柜 ニトリ リガーレ180 BK（3D，含家电）',1800,420,'#2a2a2c',{h:2020}],['kbstone','ニトリ 石目柄キッチンボード 140 ライトグレー',1400,500,'#cfcdcc',{h:1830, ch:880}],
+    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],['imtable','餐桌 ニトリ IM301H 150 LBR/BK（高 75）',1500,900,'#c9a274',{h:750}],['shellchair','餐椅 ニトリ IM301H 回転式 MO/BK（座高 46）',500,610,'#a89d90',{seat:460}],['ligare180','餐边柜 ニトリ リガーレ180 BK（3D，含家电）',1800,420,'#2a2a2c',{h:2020}],['kbstone','ニトリ 石目柄キッチンボード 140 ライトグレー',1400,500,'#cfcdcc',{h:1830, ch:880}],
     ['kboard','餐边柜 ニトリ リガーレ160 白（照片贴图）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
     ['fridge','冰箱 Panasonic 六门 白',660,720,'#f6f6f3',{model:'pana6', h:1828}],
     ['microwave','微波炉 SHARP 水波炉',487,400,'#f4f4f2'],['airfryer','空气炸锅 COSORI',260,340,'#efebe2'],['ricecooker','电饭煲 象印',255,345,'#f5f4f1'],
@@ -826,6 +826,7 @@ function furnSVG(t,w,d,c,o={}){
     case 'plainrug': return rc(x,y,w,d,c||'#d4ccbf','rx="40" fill-opacity=".8"');
     case 'sledtable': return rc(x,y,w,d,c||'#d9a86c','rx="60"') + ln(x+300,y+40,x+300,y+d-40,DASH) + ln(x+w-300,y+40,x+w-300,y+d-40,DASH);
     case 'trestle': return rc(x,y,w,d,c||'#5a3b26') + rc(x,y,70,d,shade(c||'#5a3b26',1.2)) + rc(x+w-70,y,70,d,shade(c||'#5a3b26',1.2)) + ln(x+280,y+50,x+280,y+d-50,DASH) + ln(x+w-280,y+50,x+w-280,y+d-50,DASH);
+    case 'shellchair': return rc(x+30,y+60,w-60,d-90,c||'#a89d90','rx="60"') + `<path d="M${x+20} ${y+d*.55} Q${x+20} ${y} 0 ${y} Q${x+w-20} ${y} ${x+w-20} ${y+d*.55}" fill="none" stroke="${shade(c||'#a89d90',.7)}" stroke-width="50"/>`;
     case 'imtable': return rc(x,y,w,d,c||'#c9a274','rx="130"') + [-1,1].map(s2 => ln(s2*(w/2-300)-s2*200,y+130,s2*(w/2-300)+s2*240,y+130)+ln(s2*(w/2-300)-s2*200,y+d-130,s2*(w/2-300)+s2*240,y+d-130)).join('');
     case 'ligare180': return rc(x,y,w,d,c||'#2a2a2c') + rc(x,y,w,d*(o.ud??370)/420,'#4a4a4c','opacity=".6"') + ln(x+w/3,y+d*.85,x+w/3,y+d) + ln(x+w*2/3,y+d*.85,x+w*2/3,y+d);
     case 'kbstone': return rc(x,y,w,d,c||'#cfcdcc') + rc(x,y,w,d*(o.ud??400)/500,'#e4e2e0','opacity=".7"') + ln(x+w*.22,y+d*.8,x+w*.22,y+d) + ln(x+w*.71,y+d*.8,x+w*.71,y+d);
@@ -2101,6 +2102,13 @@ const clothMat = c => cvMat('cloth' + c, 1024, 1024, (g, W, Hh, R) => {
   for (let k = 0; k < 2200; k++){ g.fillStyle = `rgba(${R() < .5 ? '0,0,0' : '255,255,255'},${.012 + R()*.025})`; g.fillRect(R()*W, R()*Hh, 20 + R()*120, 1); }
   for (let k = 0; k < 40000; k++){ g.fillStyle = `rgba(${R() < .5 ? '0,0,0' : '255,255,255'},${R()*.07})`; g.fillRect(R()*W, R()*Hh, 1.5, 1.5); }
 }, {rough:.92, bump:.25});
+// 竖向绗缝布（ダイニングチェア 靠背的竖条纹）：一个周期 = 一条 6cm 的绗缝
+const channelMat = c => cvMat('chan' + c, 128, 256, (g, W, Hh, R) => {
+  const b = new THREE.Color(c), gr = g.createLinearGradient(0, 0, W, 0);
+  gr.addColorStop(0, '#' + b.clone().multiplyScalar(.72).getHexString()); gr.addColorStop(.12, '#' + b.getHexString()); gr.addColorStop(.5, '#' + b.clone().lerp(new THREE.Color('#fff'), .08).getHexString()); gr.addColorStop(.88, '#' + b.getHexString()); gr.addColorStop(1, '#' + b.clone().multiplyScalar(.72).getHexString());
+  g.fillStyle = gr; g.fillRect(0, 0, W, Hh);
+  for (let k = 0; k < 5000; k++){ g.fillStyle = `rgba(${R() < .5 ? '40,30,20' : '255,250,240'},${R()*.12})`; g.fillRect(R()*W, R()*Hh, 1.5, 1.5); }
+}, {rough:.95, side:THREE.DoubleSide});
 // 卷帘帘片：一片 60mm（v 方向一个周期）
 const slatMat = c => cvMat('slat' + c, 16, 64, (g, W, Hh) => {
   const b = new THREE.Color(c), gr = g.createLinearGradient(0, 0, 0, Hh);
@@ -3031,6 +3039,22 @@ function buildFurniture(f){
       // 台面上：微波炉（左）、空气炸锅（右）
       applMicrowave(g, -w/2 + .3, ch, cz - .23);
       applAirFryer(g, w/4 + .05, ch, cz - .2);
+      break;
+    }
+    case 'shellchair': {        // ニトリ 回転式ダイニングチェア IM301H（W50×D61×H83，座面高 46）：竖绗缝布面贝壳椅身＋黑色细斜腿＋旋转盘；正面朝 +z
+      const fm = fabric(c || '#a89d90'), cm = channelMat(c || '#a89d90'), bk = mat(f.leg || '#1c1c1e', {roughness:.45, metalness:.4}), sy = (f.seat ?? 460)/1000;
+      g.add(rbox(.47, .075, .44, fm, 0, sy - .075, .03, .035));                                // 座垫
+      g.add(rbox(.47, .04, .07, fm, 0, sy - .07, .23, .02));                                     // 前沿微卷
+      const bh = .83 - sy + .05;
+      [[.275, .225, 0], [.295, .245, .02]].forEach(([rt, rb]) => {                                // 靠背：内外两层开口圆筒包住后半圈
+        const geo = new THREE.CylinderGeometry(rt, rb, bh, 32, 1, true, Math.PI - 1.2, 2.4), uv = geo.attributes.uv;
+        for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i)*2.4*rt/.06, uv.getY(i));
+        const m = new THREE.Mesh(geo, cm); m.position.set(0, sy - .06 + bh/2, -.02); m.rotation.x = -.12; m.castShadow = true; g.add(m);
+      });
+      const arc = []; for (let i = 0; i <= 24; i++){ const a = Math.PI - 1.2 + 2.4*i/24; arc.push([.285*Math.sin(a), sy - .06 + bh - .005, -.02 + .285*Math.cos(a) - .026]); }
+      g.add(tube(arc, .013, fm, 40));                                                            // 靠背顶边
+      g.add(cyl(.09, .09, .02, bk, 0, sy - .1, .02, 24), cyl(.025, .025, .04, bk, 0, sy - .14, .02, 12));   // 旋转盘
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => g.add(rod([a*.07, sy - .11, .02 + b*.07], [a*.2, 0, .02 + b*.22], .011, bk, .007, 10)));
       break;
     }
     case 'imtable': {           // ニトリ ダイニングテーブル IM301H 150（W150×D90×H75）：橡木贴皮软角桌面（长边微弧）＋ 黑色扁钢 λ 形脚
