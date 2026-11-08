@@ -1154,7 +1154,7 @@ const SUB_COLORS = [['frame','框架色','Frame'],['legs','腿色','Legs'],['pan
 function hex6(c, t){ if (typeof c !== 'string' || !/^#/.test(c)) return typeColor ? (typeColor(t) || '#cccccc') : '#cccccc'; if (c.length === 4) return '#' + [...c.slice(1)].map(x => x + x).join(''); return c.slice(0, 7); }
 // 各类家具可调参数（面板里直接改，不用重建模）
 const FOPTS = {
-  drape:  [['tex','款式','Style','sel',[['rk015','RK015 IV 象牙白提花'],['rd226','RD226 红色'],['','纯色（用下面颜色）']]], ['open','拉开程度','Open','range',0,1,.05,.85], ['sheer','纱帘','Sheer','chk',true], ['single','单片','Single panel','chk',false], ['top','挂钩高度 mm','Hook height mm','range',1800,2400,10,2080]],
+  drape:  [['tex','款式','Style','sel',[['rk015','RK015 IV 象牙白提花'],['rd226','RD226 红色'],['rd140','RD140 棕色 遮光1级'],['','纯色（用下面颜色）']]], ['tie','扶风纱（两侧绑带）','Tie-back sheer','chk',false], ['tieH','绑带高度 mm','Tie height mm','range',600,1600,10,1050], ['open','拉开程度','Open','range',0,1,.05,.85], ['sheer','纱帘','Sheer','chk',true], ['single','单片','Single panel','chk',false], ['top','挂钩高度 mm','Hook height mm','range',1800,2400,10,2080]],
   tvlift: [['tv','电视尺寸','TV size','sel',[[55,'55 寸'],[65,'65 寸'],[75,'75 寸'],[85,'85 寸（超出架子上限）']]], ['lift','屏幕中心高 mm','Screen center mm','range',880,1280,10,1080], ['swivel','左右转角 °','Swivel °','range',-105,105,5,0]],
   tvcart: [['tv','电视尺寸','TV size','sel',[[1231,'55 寸'],[1447,'65 寸'],[1671,'75 寸'],[1890,'85 寸'],[1450,'原始（约 65 寸）']]], ['y','屏幕中心高 mm','Screen center mm','range',800,1400,10,1100]],
   recliner:[['seats','座位数','Seats','sel',[[2,'2 人'],[3,'3 人']]], ['leather','皮革','Leather','chk',true]],
@@ -2852,6 +2852,25 @@ function buildFurniture(f){
       break;
     }
     case 'drape': {             // 遮光帘（贴图布料）+ 纱帘：f.top = 轨道高度 mm，f.open = 0~1（1 = 拉开收在两侧）
+      if (f.tie){                 // 扶风纱：两片纱帘从顶轨垂下，在 f.tieH 高处用绑带束向两侧，内侧边成弧线；边缘滚 f.trim 色边
+        const top = (f.top ?? 2390)/1000, h = top - .02, vt = Math.min(.8, Math.max(.2, (f.tieH ?? 1050)/1000/h)), hw = w/2, st = f.tieW ?? .16, sb = .5, folds = Math.max(6, Math.round(hw/.07));
+        const sm = mat(c || '#f6f1e6', {roughness:1, transparent:true, opacity:f.op ?? .78, side:THREE.DoubleSide, emissive:c || '#f6f1e6', emissiveIntensity:.4, depthWrite:false});
+        const tm = mat(f.trim || '#1b1b1b', {roughness:.6}), z0 = bz + .06, cm = mat(c || '#f6f1e6', {roughness:.9});
+        const sOf = v => v >= vt ? st + (1 - st)*Math.pow((v - vt)/(1 - vt), 1.7) : st + (sb - st)*Math.pow((vt - v)/vt, 1.2);
+        [-1, 1].forEach(sd => {
+          const NU = folds*6, NV = 60, geo = new THREE.PlaneGeometry(1, 1, NU, NV), pos = geo.attributes.position, X0 = sd*hw;
+          const P = (u, v) => { const s2 = sOf(v), amp = .02 + .05*(1 - s2); return [X0 - sd*s2*u*hw, .01 + v*h, z0 + Math.sin(u*folds*Math.PI*2)*amp*(.4 + .6*u)]; };
+          for (let i = 0; i < pos.count; i++){ const u = pos.getX(i) + .5, v = pos.getY(i) + .5, p = P(u, v); pos.setXYZ(i, p[0], p[1], p[2]); }
+          geo.computeVertexNormals(); const m = new THREE.Mesh(geo, sm); m.renderOrder = 2; g.add(m);
+          const edge = [], hem = []; for (let k = 0; k <= 60; k++) edge.push(P(1, k/60)); for (let k = 0; k <= 40; k++) hem.push(P(k/40, .004));
+          g.add(tube(edge, .005, tm, 160), tube(hem, .005, tm, 80));                      // 黑色滚边：内侧弧边 + 底边
+          const tp = P(.5, vt), band = new THREE.Mesh(new THREE.TorusGeometry(st*hw*.55, .012, 8, 24), cm);
+          band.scale.set(1, .35, 1); band.rotation.x = Math.PI/2; band.position.set(tp[0], tp[1], z0); g.add(band);   // 绑带
+          g.add(rod([tp[0] - sd*.02, tp[1] - .01, z0 + .03], [tp[0] - sd*.05, tp[1] - .22, z0 + .05], .01, cm), rod([tp[0] + sd*.01, tp[1] - .01, z0 + .03], [tp[0] + sd*.03, tp[1] - .18, z0 + .06], .01, cm));   // 绑带尾巴
+        });
+        g.add(box(w + .04, .025, .05, mat('#f1efea', {roughness:.5}), 0, top - .015, z0));      // 天花顶轨
+        break;
+      }
       const top = (f.top ?? 2080)/1000, h = top - .03, op = f.open ?? .85, gath = Math.max(.3, w/2*(1 - op*.72)), dz = .05;
       let dm = f.tex && PHOTO_TEX[f.tex] ? _dm.get(f.tex) : null;
       if (f.tex && PHOTO_TEX[f.tex] && !dm){
@@ -3064,7 +3083,13 @@ function buildFurniture(f){
       sh.moveTo(-a + r, -b); sh.quadraticCurveTo(0, -b - bu, a - r, -b); sh.quadraticCurveTo(a, -b, a, -b + r); sh.lineTo(a, b - r); sh.quadraticCurveTo(a, b, a - r, b);
       sh.quadraticCurveTo(0, b + bu, -a + r, b); sh.quadraticCurveTo(-a, b, -a, b - r); sh.lineTo(-a, -b + r); sh.quadraticCurveTo(-a, -b, -a + r, -b);
       const tg = new THREE.ExtrudeGeometry(sh, {depth:t - .006, bevelEnabled:true, bevelThickness:.003, bevelSize:.004, bevelSegments:2, curveSegments:24}); tg.rotateX(Math.PI/2);
-      const tp = new THREE.Mesh(tg, wm); tp.position.y = hh - .003; tp.castShadow = tp.receiveShadow = true; g.add(tp);
+      let tm = wm;
+      if (f.tex && PHOTO_TEX[f.tex]){                 // 桌面用实物照片的木纹（贴图 = 1.0m × 0.35m，木纹沿长边）
+        tm = _dm.get('tb' + f.tex);
+        if (!tm){ const t = new THREE.TextureLoader().load(PHOTO_TEX[f.tex], () => { try { startLoop(); } catch(e) {} }); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping; t.repeat.set(1/1.0, 1/.35); t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          tm = new THREE.MeshStandardMaterial({map:t, roughness:.45, emissive:'#ffffff', emissiveMap:t, emissiveIntensity:.05}); _dm.set('tb' + f.tex, tm); }
+      }
+      const tp = new THREE.Mesh(tg, [tm, wm]); tp.position.y = hh - .003; tp.castShadow = tp.receiveShadow = true; g.add(tp);
       const bar = (x1, y1, x2, y2, z) => { const L = Math.hypot(x2 - x1, y2 - y1), o = new THREE.Mesh(new THREE.BoxGeometry(L, .055, .022), bk); o.position.set((x1 + x2)/2, (y1 + y2)/2, z); o.rotation.z = Math.atan2(y2 - y1, x2 - x1); o.castShadow = true; g.add(o); };
       const ty = hh - t;
       [-1, 1].forEach(s2 => { const x0 = s2*(a - .3);
