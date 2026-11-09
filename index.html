@@ -2870,13 +2870,13 @@ function buildFurniture(f){
     }
     case 'drape': {             // 遮光帘（贴图布料）+ 纱帘：f.top = 轨道高度 mm，f.open = 0~1（1 = 拉开收在两侧）
       if (f.tie){                 // 扶风纱：两片纱帘从顶轨垂下，在 f.tieH 高处用绑带束向两侧，内侧边成弧线；边缘滚 f.trim 色边
-        const top = (f.top ?? 2390)/1000, h = top - .02, vt = Math.min(.8, Math.max(.2, (f.tieH ?? 1050)/1000/h)), hw = w/2, st = f.tieW ?? .16, sb = .5, folds = Math.max(6, Math.round(hw/.07));
+        const top = (f.top ?? 2390)/1000, h = f.len ? f.len/1000 : top - .02, y0 = top - .015 - h, vt = Math.min(.8, Math.max(.2, ((f.tieH ?? 1050)/1000 - y0)/h)), hw = w/2, st = f.tieW ?? .16, sb = .5, folds = Math.max(6, Math.round(hw*(f.full ?? 2)/.14));
         const sm = mat(c || '#f6f1e6', {roughness:1, transparent:true, opacity:f.op ?? .78, side:THREE.DoubleSide, emissive:c || '#f6f1e6', emissiveIntensity:.4, depthWrite:false});
         const tm = mat(f.trim || '#1b1b1b', {roughness:.6}), z0 = bz + .06, cm = mat(c || '#f6f1e6', {roughness:.9});
         const sOf = v => v >= vt ? st + (1 - st)*Math.pow((v - vt)/(1 - vt), 1.7) : st + (sb - st)*Math.pow((vt - v)/vt, 1.2);
         [-1, 1].forEach(sd => {
           const NU = folds*6, NV = 60, geo = new THREE.PlaneGeometry(1, 1, NU, NV), pos = geo.attributes.position, X0 = sd*hw;
-          const P = (u, v) => { const s2 = sOf(v), amp = .02 + .05*(1 - s2); return [X0 - sd*s2*u*hw, .01 + v*h, z0 + Math.sin(u*folds*Math.PI*2)*amp*(.4 + .6*u)]; };
+          const P = (u, v) => { const s2 = sOf(v), amp = .02 + .05*(1 - s2); return [X0 - sd*s2*u*hw, y0 + v*h, z0 + Math.sin(u*folds*Math.PI*2)*amp*(.4 + .6*u)]; };
           for (let i = 0; i < pos.count; i++){ const u = pos.getX(i) + .5, v = pos.getY(i) + .5, p = P(u, v); pos.setXYZ(i, p[0], p[1], p[2]); }
           geo.computeVertexNormals(); const m = new THREE.Mesh(geo, sm); m.renderOrder = 2; g.add(m);
           const edge = [], hem = []; for (let k = 0; k <= 60; k++) edge.push(P(1, k/60)); for (let k = 0; k <= 40; k++) hem.push(P(k/40, .004));
