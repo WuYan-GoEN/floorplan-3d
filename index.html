@@ -2683,6 +2683,10 @@ function buildFurniture(f){
       cab.rotation.y = Math.PI; cab.position.z = bz + cd/2; g.add(cab);                    // 柜门朝 -z，+z 侧留出吧台挑空
       g.add(rbox(w, .05, d, stone, 0, .84, 0, .006));
       if (f.panel) g.add(box(w - .08, .84, .03, mat(f.panel, {roughness:.55}), 0, 0, d/2 - .03));   // 对面厨房朝客厅一侧的腰壁
+      if (f.ph){                  // 图纸上的腰壁（H=f.ph mm，厚 f.pd mm）：台面朝餐厅一侧再立起一段矮墙挡住水槽，顶上压白色笠木
+        const ph = f.ph/1000, pd = (f.pd ?? 290)/1000, pm = mat(f.panel || c, {roughness:.55}), cm2 = mat(f.cap || '#f2f1ee', {roughness:.35});
+        g.add(box(w, ph - .89, pd - .02, pm, 0, .89, d/2 - pd/2 - .01), rbox(w + .02, .025, pd + .01, cm2, 0, ph - .025, d/2 - pd/2, .004));
+      }
       [-1, 1].forEach(s => g.add(box(.04, .84, d, f.cap ? mat(f.cap, {roughness:.35}) : f.panel ? mat(f.panel, {roughness:.55}) : stone, s*(w/2 - .02), 0, 0)));             // 侧板（f.cap：白色端板）
       g.add(lathe([[0, 0], [.06, 0], [.14, .06], [.15, .07]], mat('#6b543f', {roughness:.5, side:THREE.DoubleSide}), w*.22, .89, 0, 32));
       for (let k = 0; k < 4; k++) g.add(blob(.04, .04, .04, ['#d98c4a', '#9fbf5a', '#b5463a', '#e6c14f'][k], w*.22 + Math.cos(k*1.6)*.05, .935 + (k === 3 ? .04 : 0), Math.sin(k*1.6)*.05, 14));
