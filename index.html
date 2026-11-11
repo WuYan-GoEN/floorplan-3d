@@ -552,7 +552,7 @@ const LIB = [
     ['kboard','餐边柜 灰褐石纹1600',1600,490,'#9a8a7c',{h:1970, tex:'gp1600'}],
     ['kboard','餐边柜 カイト160 浅灰石纹',1610,510,'#cfc8bf',{h:1974, tex:'kite160'}],
     ['kboard','餐边柜 MATSUDA 120 白+原木',1200,480,'#d9cdb9',{h:1990, tex:'gaia120'}],
-    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],['fan4','吊扇灯 ニトリ シンプルデザイン 4灯 BK（Φ106）',1060,1060,'#1c1c1e',{blade:'walnut', up:0}],['imtable','餐桌 ニトリ IM301H 150 LBR/BK（高 75）',1500,900,'#c9a274',{h:750}],['shellchair','餐椅 ニトリ IM301H 回転式 MO/BK（座高 46）',500,610,'#a89d90',{seat:460}],['ligare180','餐边柜 ニトリ リガーレ180 BK（3D，含家电）',1800,420,'#2a2a2c',{h:2020}],['kbstone','ニトリ 石目柄キッチンボード 140 ライトグレー',1400,500,'#cfcdcc',{h:1830, ch:880}],
+    ['ligare','餐边柜 リガーレ160（3D，含家电）',1600,510,'#f1efea',{h:2020}],['ot01table','餐桌 ニトリ なぐり加工 OT01 140 BR',1400,800,'#6b4a33',{h:720}],['ot01chair','餐椅 ニトリ なぐり加工 OT01 半扶手',530,530,'#b8ab98'],['sinnerlig','竹编吊灯 IKEA SINNERLIG',270,270,'#c9a06e',{drop:400}],['shagrug','长毛地毯（浅色 毛茸茸）',2000,2500,'#efe8dc'],['fan4','吊扇灯 ニトリ シンプルデザイン 4灯 BK（Φ106）',1060,1060,'#1c1c1e',{blade:'walnut', up:0}],['imtable','餐桌 ニトリ IM301H 150 LBR/BK（高 75）',1500,900,'#c9a274',{h:750}],['shellchair','餐椅 ニトリ IM301H 回転式 MO/BK（座高 46）',500,610,'#a89d90',{seat:460}],['ligare180','餐边柜 ニトリ リガーレ180 BK（3D，含家电）',1800,420,'#2a2a2c',{h:2020}],['kbstone','ニトリ 石目柄キッチンボード 140 ライトグレー',1400,500,'#cfcdcc',{h:1830, ch:880}],
     ['kboard','餐边柜 ニトリ リガーレ160 白（照片贴图）',1600,510,'#efece6',{h:2020, tex:'ligare160'}],
     ['fridge','冰箱 Panasonic 六门 白',660,720,'#f6f6f3',{model:'pana6', h:1828}],
     ['microwave','微波炉 SHARP 水波炉',487,400,'#f4f4f2'],['airfryer','空气炸锅 COSORI',260,340,'#efebe2'],['ricecooker','电饭煲 象印',255,345,'#f5f4f1'],
@@ -811,7 +811,10 @@ function furnSVG(t,w,d,c,o={}){
     case 'sicrack': return rc(x,y,w,d,c||'#d8c3a5','opacity=".6"') + ln(x,0,x+w,0,'stroke-width="12"');
     case 'litter': return rc(x,y,w,d,c||'#e7e2d8','rx="60"') + rc(x+60,y+60,w-120,d-120,'#cfc6b7','rx="50"');
     case 'catbowl': return rc(x,y,w,d,'#d9cfc0','rx="30"') + ec(-w*.22,0,70,70,'#fff') + ec(w*.22,0,70,70,'#fff');
-    case 'pendant': case 'fan': case 'fan4': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
+    case 'ot01table': return rc(x,y,w,d,c||'#6b4a33');
+    case 'ot01chair': return rc(x+30,y+40,w-60,d-60,c||'#b8ab98','rx="40"') + rc(x+30,y+20,w-60,90,shade(c||'#b8ab98',.75));
+    case 'shagrug': return rc(x,y,w,d,c||'#efe8dc','rx="40"');
+    case 'pendant': case 'fan': case 'fan4': case 'sinnerlig': return ec(0,0,w/2,d/2,'none',DASH) + ec(0,0,Math.min(w,d)*.12,Math.min(w,d)*.12,'#f6ecd9');
     case 'beam': return rc(x,y,w,d,'none',DASH);
     case 'rosevine': { let o = rc(x,y,w,d,'#8fb27a','rx="60" fill-opacity=".75"'); for (let i = 0; i*220 < w - 120; i++){ const cx = x + 110 + i*220 + (i%3)*30, cy = y + d*(.3 + ((i*7)%5)*.1); o += ec(cx,cy,60,60,i%2 ? '#f6c3c0' : '#ee8f96'); } return o; }
     case 'drape': return rc(x,y,w,d,'#ece6da','fill-opacity=".3" stroke-dasharray="20 12" stroke-width="6"') + (o.single ? rc(x,y,w,d,c||'#ece6da','fill-opacity=".8"') : rc(x,y,w*.2,d,'#ece6da') + rc(x+w*.8,y,w*.2,d,'#ece6da'));
@@ -2110,6 +2113,20 @@ const channelMat = c => cvMat('chan' + c, 128, 256, (g, W, Hh, R) => {
   g.fillStyle = gr; g.fillRect(0, 0, W, Hh);
   for (let k = 0; k < 5000; k++){ g.fillStyle = `rgba(${R() < .5 ? '40,30,20' : '255,250,240'},${R()*.12})`; g.fillRect(R()*W, R()*Hh, 1.5, 1.5); }
 }, {rough:.95, side:THREE.DoubleSide});
+// 竹编网眼（IKEA SINNERLIG）：斜纹交叉编织，带透光孔（alpha）
+const weaveBambooMat = () => { if (_cvM.bamboo) return _cvM.bamboo; const m = cvMat('bamboo', 256, 256, (g, W, Hh, R) => {
+  g.clearRect(0, 0, W, Hh); const n = 16, st = W/n;
+  for (const dir of [1, -1]) for (let i = -n; i < 2*n; i++){ g.strokeStyle = `rgb(${200 + R()*30|0},${150 + R()*25|0},${90 + R()*20|0})`; g.lineWidth = st*.42; g.beginPath(); g.moveTo(i*st, 0); g.lineTo(i*st + dir*Hh, Hh); g.stroke(); }
+}, {rough:.8, side:THREE.DoubleSide}); m.transparent = true; m.alphaTest = .3; m.emissive = new THREE.Color('#ffd9a0'); m.emissiveMap = m.map; m.emissiveIntensity = .55; return m; };
+// なぐり加工 木纹：沿长边一排排浅凿痕（波纹）＋木纹，1024px = 1m × 0.5m
+const naguriMat = c => cvMat('naguri' + c, 1024, 512, (g, W, Hh, R) => {
+  const b = new THREE.Color(c), col = k => `rgb(${Math.min(255, b.r*255*k)|0},${Math.min(255, b.g*255*k)|0},${Math.min(255, b.b*255*k)|0})`;
+  g.fillStyle = col(1); g.fillRect(0, 0, W, Hh);
+  for (let k = 0; k < 120; k++){ g.strokeStyle = col(.78 + R()*.3); g.lineWidth = .8 + R()*2; g.beginPath(); let y = R()*Hh; g.moveTo(0, y); for (let x = 0; x <= W; x += 32){ y += (R() - .5)*3; g.lineTo(x, y); } g.stroke(); }
+  const rows = 9, rh = Hh/rows;
+  for (let r = 0; r < rows; r++){ let x = -R()*60; while (x < W){ const L = 50 + R()*40, gr = g.createLinearGradient(x, 0, x + L, 0);
+    gr.addColorStop(0, 'rgba(0,0,0,.16)'); gr.addColorStop(.35, 'rgba(255,255,255,.05)'); gr.addColorStop(1, 'rgba(0,0,0,.02)'); g.fillStyle = gr; g.fillRect(x, r*rh, L, rh); x += L; } }
+}, {rough:.6, bump:.8, glow:.12});
 // 卷帘帘片：一片 60mm（v 方向一个周期）
 const slatMat = c => cvMat('slat' + c, 16, 64, (g, W, Hh) => {
   const b = new THREE.Color(c), gr = g.createLinearGradient(0, 0, 0, Hh);
@@ -2983,6 +3000,41 @@ function buildFurniture(f){
       }
       break;
     }
+    case 'ot01table': {         // ニトリ なぐり加工ダイニングテーブル OT01 140（W140×D80×H72）：なぐり加工 木纹面（边缘波纹）＋ 4 根黑色钢管脚
+      const hh = (f.h ?? 720)/1000, t = .03, tm = naguriMat(c || '#6b4a33'), lm = mat(f.leg || '#2a2522', {roughness:.45, metalness:.5});
+      const top = rbox(w, t, d, tm, 0, hh - t, 0, .008); g.add(top);
+      const sh = uvPlane(w - .01, d - .01, tm, 1, .5); sh.rotation.x = -Math.PI/2; sh.position.y = hh + .0008; g.add(sh);
+      g.add(box(w - .2, .06, .02, lm, 0, hh - t - .06, d/2 - .06), box(w - .2, .06, .02, lm, 0, hh - t - .06, -d/2 + .06), box(.02, .06, d - .14, lm, w/2 - .08, hh - t - .06, 0), box(.02, .06, d - .14, lm, -w/2 + .08, hh - t - .06, 0));
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b2]) => g.add(box(.04, hh - t, .04, lm, a*(w/2 - .07), 0, b2*(d/2 - .07))));
+      break;
+    }
+    case 'ot01chair': {         // 同系列 半扶手椅（W53×D53×H73）：木纹扶手框 + 麂皮绒感软包椅背／座面；正面朝 +z
+      const wm = naguriMat(f.frame || '#6b4a33'), um = fabric(c || '#b8ab98'), lm = mat(f.leg || '#2a2522', {roughness:.45, metalness:.5}), sy = .44;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b2]) => g.add(box(.03, sy - .06, .03, lm, a*(w/2 - .05), 0, b2*(d/2 - .06))));
+      g.add(box(w - .06, .04, d - .06, lm, 0, sy - .1, 0), rbox(w - .07, .08, d - .1, um, 0, sy - .07, .02, .03));
+      const bk = rbox(w - .06, .3, .07, um, 0, sy + .02, -d/2 + .07, .03); bk.rotation.x = -.12; g.add(bk);
+      [-1, 1].forEach(a => { g.add(rbox(.045, .03, d*.6, wm, a*(w/2 - .03), .66, -d*.1, .01), box(.03, .66 - sy + .06, .03, lm, a*(w/2 - .04), sy - .06, d*.12)); });
+      break;
+    }
+    case 'sinnerlig': {         // IKEA SINNERLIG 竹编吊灯：上小筒 + 中间鼓形 + 下筒 三段，黑色吊线和天花罩
+      const r = w/2, hh = r*2.3*.55, y = H - (f.drop ?? 400)/1000, bm = weaveBambooMat(), bk = mat('#1d1d1d', {roughness:.5});
+      const H1 = H + (f.up ?? 0)/1000;
+      g.add(lathe([[0, 0], [.055, 0], [.06, -.02], [.045, -.06], [0, -.065]].map(([a, b]) => [a, b + .065]), bk, 0, H1 - .065, 0, 24), rod([0, H1 - .06, 0], [0, y + hh, 0], .003, bk));
+      const seg = (rr, y0, h1, bulge) => { const pts = []; for (let i = 0; i <= 10; i++){ const t = i/10; pts.push([rr*(1 + (bulge || 0)*Math.sin(Math.PI*t)), y0 + h1*t]); }
+        const o = new THREE.Mesh(new THREE.LatheGeometry(pts.map(([a, b]) => new THREE.Vector2(a, b)), 40), bm); o.position.y = y; o.castShadow = true; g.add(o); };
+      seg(r*.72, 0, hh*.26); seg(r*.95, hh*.24, hh*.5, .06); seg(r*.62, hh*.72, hh*.28);
+      [[r*.72, 0], [r*.72, hh*.26], [r*.62, hh*.72], [r*.62, hh]].forEach(([rr, yy]) => { const t = new THREE.Mesh(new THREE.TorusGeometry(rr, .003, 4, 40), mat('#c49a62', {roughness:.8})); t.rotation.x = Math.PI/2; t.position.y = y + yy; g.add(t); });
+      const b = new THREE.Mesh(new THREE.SphereGeometry(.04, 16, 12), glowMat('#fff6e0', '#ffd9a0', 1.2)); b.position.y = y + hh*.45; g.add(b);
+      break;
+    }
+    case 'shagrug': {           // 毛茸茸长毛地毯：底布 + 大量随机倾斜的绒毛簇
+      const cm = mat(c || '#efe8dc', {roughness:1}), R = rng(Math.round(w*1000 + d*7));
+      g.add(rbox(w, .012, d, cm, 0, 0, 0, .03));
+      const N = Math.min(14000, Math.round(w*d*3200)), geo = new THREE.ConeGeometry(.011, .045, 5), im = new THREE.InstancedMesh(geo, cm, N), o = new THREE.Object3D(), col = new THREE.Color();
+      for (let i = 0; i < N; i++){ o.position.set((R() - .5)*(w - .02), .03, (R() - .5)*(d - .02)); o.rotation.set((R() - .5)*1.2, R()*6.3, (R() - .5)*1.2); const k = .7 + R()*.6; o.scale.set(k, k, k); o.updateMatrix(); im.setMatrixAt(i, o.matrix); im.setColorAt(i, col.set(c || '#efe8dc').multiplyScalar(.9 + R()*.14)); }
+      im.receiveShadow = true; g.add(im);
+      break;
+    }
     case 'paperlamp': {         // 和纸灯笼吊灯（AKARI 风）：竹骨横向肋 + 和纸灯罩，黑色细线
       const r = w/2, hh = (f.h ?? 450)/1000, y = H - (f.drop ?? 700)/1000, paper = glowMat('#f8f2e6', '#ffe1b0', .85);
       const H1 = H + (f.up ?? 0)/1000;   // 挂在折上天井里时，吊线从凹槽顶开始
@@ -3680,7 +3732,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
+  const HIGH = ['sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
