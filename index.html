@@ -756,6 +756,7 @@ function furnSVG(t,w,d,c,o={}){
     case 'beanbag': return ec(0,0,w/2,d/2,c) + ec(-w*.04,-d*.06,w*.3,d*.28,shade(c,1.12),'opacity=".9"');
     case 'sidetable': return ec(0,0,w/2,d/2,c) + ec(0,0,w*.12,d*.12,'none','opacity=".5"');
     case 'varptross': return `<circle r="${m*.5}" fill="#e9d3ad" ${ST}/>` + `<circle r="${m*.32}" fill="#fff3d6" ${ST}/>`;
+    case 'ranarp': return ec(0,0,w/2,d/2,'#1d1d1f') + ec(0,0,w*.3,d*.3,'#fff6dd');
     case 'domependant': return ec(0,0,w/2,d/2,'#f4f2ee') + ec(0,0,w*.36,d*.36,'none','stroke-dasharray="10 8"') + ec(0,0,w*.2,d*.2,'none','stroke-dasharray="10 8"') + `<circle r="${m*.04}" fill="#fff6dd" ${ST}/>`;
     case 'trubbrufse': return ec(0,0,w/2,d/2,'#f8f4ea',`stroke-dasharray="14 10" stroke-width="10"`) + ec(0,0,w*.12,d*.12,'#f6ecd9');
     case 'floorlamp': return `<circle r="${m*.5}" fill="#fff6dd" fill-opacity=".85" ${ST}/>` + `<circle r="${m*.32}" fill="none" ${ST} ${DASH}/>` + `<circle r="${m*.07}" fill="${c}" ${ST}/>`;
@@ -3524,6 +3525,13 @@ function buildFurniture(f){
       const scr = box(.14, .006, .09, screenMat('#2a4a6a'), w/2 - .09, .675, back + .85); scr.rotation.x = -.3; g.add(scr);
       break;
     }
+    case 'ranarp': {            // IKEA RANARP 黑色金属吊灯 Φ23：小半球灯罩＋黄铜色灯头，定向照台面
+      const r = w/2, hh = .16, y = H - (f.drop ?? 800)/1000, bk = mat(c || '#1d1d1f', {roughness:.45, metalness:.4, side:THREE.DoubleSide}), br = mat('#b08d57', {roughness:.35, metalness:.8});
+      g.add(rod([0, H, 0], [0, y + hh + .06, 0], .003, mat('#2b2b2d')), cyl(.045, .045, .02, bk, 0, H - .02, 0, 16), cyl(.022, .022, .06, br, 0, y + hh, 0, 14));
+      const pts = []; for (let i = 0; i <= 12; i++){ const t = i/12; pts.push([r*Math.cos(t*Math.PI/2*.88), hh*Math.sin(t*Math.PI/2)]); }
+      g.add(lathe(pts, bk, 0, y, 0, 40), cyl(r*.75, r*.75, .004, glowMat('#fff8ea', '#ffe2b3', 1.1), 0, y + .02, 0, 28));
+      break;
+    }
     case 'globe': {             // 小号乳白玻璃吊灯（中岛上方）
       const r = w/2, y = H - (f.drop ?? 750)/1000, wd = woodM(c || '#6b4a33');
       g.add(rod([0, H, 0], [0, y + r*1.6, 0], .003, mat('#2b2b2d')), cyl(.04, .04, .015, mat('#efece6'), 0, H - .015, 0, 16));
@@ -3763,7 +3771,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['domependant', 'trubbrufse', 'sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
+  const HIGH = ['ranarp', 'domependant', 'trubbrufse', 'sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
