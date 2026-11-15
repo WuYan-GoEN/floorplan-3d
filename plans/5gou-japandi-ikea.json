@@ -1,6 +1,6 @@
 {
  "id": "5gou-japandi-ikea",
- "title": "5号棟 日式现代＋IKEA 竹编灯试摆",
+ "title": "5号棟 日式现代＋IKEA 灯具试摆",
  "titleEn": "Bldg 5 · Japandi",
  "subtitle": "黑白＋浅原木＋焦糖皮革",
  "north": 26.1,
@@ -1345,16 +1345,17 @@
      }
     ],
     [
-     "trubbrufse",
-     "吸顶灯 IKEA TRUBBRUFSE Φ45（E26×3）",
+     "domependant",
+     "餐厅吊灯 IKEA 白色铝圆顶（同心圆防眩格栅，E26）",
      1025,
      1365,
-     450,
-     450,
+     500,
+     500,
      0,
-     "#5a4632",
+     "#eeece8",
      {
-      "h": 150
+      "h": 220,
+      "drop": 930
      }
     ],
     [
@@ -3113,16 +3114,16 @@
      }
     ],
     [
-     "sinnerlig",
-     "主卧吊灯 IKEA SINNERLIG 竹编",
+     "trubbrufse",
+     "主卧吸顶灯 IKEA TRUBBRUFSE Φ45（E26×3）",
      7700,
      3650,
-     270,
-     270,
+     450,
+     450,
      0,
-     "#c9a06e",
+     "#5a4632",
      {
-      "drop": 420
+      "h": 150
      }
     ],
     [
