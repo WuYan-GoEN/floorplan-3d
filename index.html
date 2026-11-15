@@ -755,6 +755,8 @@ function furnSVG(t,w,d,c,o={}){
     }
     case 'beanbag': return ec(0,0,w/2,d/2,c) + ec(-w*.04,-d*.06,w*.3,d*.28,shade(c,1.12),'opacity=".9"');
     case 'sidetable': return ec(0,0,w/2,d/2,c) + ec(0,0,w*.12,d*.12,'none','opacity=".5"');
+    case 'varptross': return `<circle r="${m*.5}" fill="#e9d3ad" ${ST}/>` + `<circle r="${m*.32}" fill="#fff3d6" ${ST}/>`;
+    case 'trubbrufse': return ec(0,0,w/2,d/2,'#f8f4ea',`stroke-dasharray="14 10" stroke-width="10"`) + ec(0,0,w*.12,d*.12,'#f6ecd9');
     case 'floorlamp': return `<circle r="${m*.5}" fill="#fff6dd" fill-opacity=".85" ${ST}/>` + `<circle r="${m*.32}" fill="none" ${ST} ${DASH}/>` + `<circle r="${m*.07}" fill="${c}" ${ST}/>`;
     case 'island': return rc(x,y,w,d,c) + ln(x,y+d-250,x+w,y+d-250,DASH);
     case 'barstool': return `<circle r="${m/2}" fill="${c}" ${ST}/><circle r="${m*.3}" fill="${shade(c,1.15)}" ${ST}/>`;
@@ -843,7 +845,7 @@ function furnSVG(t,w,d,c,o={}){
 }
 
 /* ======================= 渲染 ======================= */
-const NOLABEL = ['accentwall','blind','tray','tilewall','bathkit','shutter','gardentap','gardenlight','downpipe','plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
+const NOLABEL = ['varptross','accentwall','blind','tray','tilewall','bathkit','shutter','gardentap','gardenlight','downpipe','plant','floorlamp','sidetable','barstool','beanbag','pendant','fan','beam','art','curtain','globe','drum','cat','catbowl'];
 function renderRooms(){
   let s = '';
   ROOMS.forEach(r => s += `<polygon class="room" data-room="${r.id}" points="${r.poly.map(p=>p.join(',')).join(' ')}" fill="url(#m-${state.rooms[r.id].mat})"/>`);
@@ -2686,6 +2688,25 @@ function buildFurniture(f){
       vase(g, r*.35, .545, -r*.1, .035, .12, '#e9e2d6', R, false);
       break;
     }
+    case 'varptross': {          // IKEA VARPTROSS 竹条落地灯：铸铁底座＋两层竹条圆筒，内衬发光筒（GU10）
+      const r = Math.min(w, d)/2, h = (f.h ?? 1380)/1000, bm = woodM(c || '#d9bb8c'), bm2 = woodM('#c9a673');
+      g.add(cyl(r*.72, r*.74, .1, bm2, 0, 0, 0, 32));
+      g.add(cyl(r*.5, r*.5, h - .2, glowMat('#f7e7c8', '#ffc884', .7), 0, .1, 0, 24));
+      const n = 34;
+      for (let i = 0; i < n; i++){ const a = i/n*Math.PI*2, s1 = rbox(.014, h - .1 - .015, .007, bm, Math.cos(a)*r, .1, Math.sin(a)*r, .003); s1.rotation.y = -a + Math.PI/2; g.add(s1); }
+      for (let i = 0; i < n; i++){ const a = (i + .5)/n*Math.PI*2, s1 = rbox(.012, h*.55, .006, bm2, Math.cos(a)*r*.86, h*.3, Math.sin(a)*r*.86, .003); s1.rotation.y = -a + Math.PI/2; g.add(s1); }
+      [.1, h*.3, h*.58, h - .02].forEach(yy => { const t = new THREE.Mesh(new THREE.TorusGeometry(yy < .2 ? r*.98 : r*.9, .004, 4, 40), bm2); t.rotation.x = Math.PI/2; t.position.y = yy; g.add(t); });
+      g.add(blob(.03, .03, .03, glowMat('#fff', '#ffd9a0', 1.3), 0, h - .25, 0, 12));
+      break;
+    }
+    case 'trubbrufse': {         // IKEA TRUBBRUFSE 吸顶灯 Φ45：深色草绳竖向缠绕的鼓形灯罩＋底部乳白亚克力
+      const r = w/2, hh = (f.h ?? 150)/1000, y = H - hh - (f.gap ?? 0)/1000, rope = mat(c || '#5a4632', {roughness:1});
+      g.add(cyl(r*.92, r*.92, .012, glowMat('#fbf7ee', '#ffe2b4', .9), 0, y + .01, 0, 48));
+      g.add(cyl(r*.9, r*.9, hh - .02, glowMat('#f6efe0', '#ffdcaa', .45), 0, y + .02, 0, 40));
+      [y + .012, y + hh - .01].forEach(yy => { const t = new THREE.Mesh(new THREE.TorusGeometry(r, .012, 6, 56), rope); t.rotation.x = Math.PI/2; t.position.y = yy; g.add(t); });
+      const n = 90; for (let i = 0; i < n; i++){ const a = i/n*Math.PI*2; g.add(rod([Math.cos(a)*r, y + .012, Math.sin(a)*r], [Math.cos(a + .04)*r, y + hh - .01, Math.sin(a + .04)*r], .0045, rope, .0045, 5)); }
+      break;
+    }
     case 'floorlamp': {
       const r = Math.min(w, d)/2, lm = mat(c, {roughness:.35, metalness:.5});
       g.add(lathe([[0, 0], [r*.55, 0], [r*.58, .012], [r*.5, .03], [.02, .035]], lm, 0, 0, 0, 40), rod([0, .03, 0], [0, 1.36, 0], .011, lm));
@@ -3732,7 +3753,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
+  const HIGH = ['trubbrufse', 'sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
