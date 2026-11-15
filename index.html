@@ -2732,19 +2732,19 @@ function buildFurniture(f){
     }
     case 'island': {
       const cm = mat(c, {roughness:.45}), stone = mat(f.top || '#dcd7cf', {roughness:.2}), cd = d - .3, n = Math.max(1, Math.round((w - .1)/.6)), cab = new THREE.Group(), fz = cd/2 - .03;
-      cab.add(box(w - .12, .1, cd - .08, '#4a4641', 0, 0, -.04), box(w - .1, .74, cd - .03, cm, 0, .1, -.015));
-      fronts(cab, -w/2 + .05, .64, w - .1, .2, fz, n, 1, cm, 'bar'); fronts(cab, -w/2 + .05, .1, w - .1, .54, fz, n, 1, cm, 'bar', .56);
+      cab.add(box(w - .12, .1, cd - .08, '#4a4641', 0, 0, -.04), box(w - .1, .72, cd - .03, cm, 0, .1, -.015));
+      fronts(cab, -w/2 + .05, .62, w - .1, .2, fz, n, 1, cm, 'bar'); fronts(cab, -w/2 + .05, .1, w - .1, .52, fz, n, 1, cm, 'bar', .54);
       cab.rotation.y = Math.PI; cab.position.z = bz + cd/2; g.add(cab);                    // 柜门朝 -z，+z 侧留出吧台挑空
-      g.add(rbox(w, .05, d, stone, 0, .84, 0, .006));
-      if (f.panel) g.add(box(w - .08, .84, .03, mat(f.panel, {roughness:.55}), 0, 0, d/2 - .03));   // 对面厨房朝客厅一侧的腰壁
+      g.add(rbox(w, .04, d, stone, 0, .82, 0, .006));                                     // 台面上沿 .86，与灶台／水槽同高
+      if (f.panel) g.add(box(w - .08, .82, .03, mat(f.panel, {roughness:.55}), 0, 0, d/2 - .03));   // 对面厨房朝客厅一侧的腰壁
       if (f.ph){                  // 图纸上的腰壁（H=f.ph mm，厚 f.pd mm）：台面朝餐厅一侧再立起一段矮墙挡住水槽，顶上压白色笠木
         const ph = f.ph/1000, pd = (f.pd ?? 290)/1000, pm = mat(f.panel || c, {roughness:.55}), cm2 = mat(f.cap || '#f2f1ee', {roughness:.35});
-        g.add(box(w, ph - .89, pd - .02, pm, 0, .89, d/2 - pd/2 - .01), rbox(w + .02, .025, pd + .01, cm2, 0, ph - .025, d/2 - pd/2, .004));
+        g.add(box(w, ph - .025 - .86, pd - .02, pm, 0, .86, d/2 - pd/2 - .01), rbox(w + .02, .025, pd + .01, cm2, 0, ph - .025, d/2 - pd/2, .004));
       }
-      [-1, 1].forEach(s => g.add(box(.04, .84, d, f.cap ? mat(f.cap, {roughness:.35}) : f.panel ? mat(f.panel, {roughness:.55}) : stone, s*(w/2 - .02), 0, 0)));             // 侧板（f.cap：白色端板）
-      g.add(lathe([[0, 0], [.06, 0], [.14, .06], [.15, .07]], mat('#6b543f', {roughness:.5, side:THREE.DoubleSide}), w*.22, .89, 0, 32));
-      for (let k = 0; k < 4; k++) g.add(blob(.04, .04, .04, ['#d98c4a', '#9fbf5a', '#b5463a', '#e6c14f'][k], w*.22 + Math.cos(k*1.6)*.05, .935 + (k === 3 ? .04 : 0), Math.sin(k*1.6)*.05, 14));
-      vase(g, -w*.25, .89, -.05, .05, .22, '#e9e2d6', R);
+      [-1, 1].forEach(s => g.add(box(.04, .82, d - .002, f.cap ? mat(f.cap, {roughness:.35}) : f.panel ? mat(f.panel, {roughness:.55}) : stone, s*(w/2 - .02), 0, 0)));             // 侧板（f.cap：白色端板），比台面略窄避免面重合
+      g.add(lathe([[0, 0], [.06, 0], [.14, .06], [.15, .07]], mat('#6b543f', {roughness:.5, side:THREE.DoubleSide}), w*.02, .86, -.12, 32));
+      for (let k = 0; k < 4; k++) g.add(blob(.04, .04, .04, ['#d98c4a', '#9fbf5a', '#b5463a', '#e6c14f'][k], w*.02 + Math.cos(k*1.6)*.05, .905 + (k === 3 ? .04 : 0), -.12 + Math.sin(k*1.6)*.05, 14));
+      vase(g, -w*.13, .86, -.12, .05, .22, '#e9e2d6', R);
       break;
     }
     case 'barstool': {
