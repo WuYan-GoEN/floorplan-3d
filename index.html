@@ -756,6 +756,9 @@ function furnSVG(t,w,d,c,o={}){
     case 'beanbag': return ec(0,0,w/2,d/2,c) + ec(-w*.04,-d*.06,w*.3,d*.28,shade(c,1.12),'opacity=".9"');
     case 'sidetable': return ec(0,0,w/2,d/2,c) + ec(0,0,w*.12,d*.12,'none','opacity=".5"');
     case 'varptross': return `<circle r="${m*.5}" fill="#e9d3ad" ${ST}/>` + `<circle r="${m*.32}" fill="#fff3d6" ${ST}/>`;
+    case 'kbbed': return rc(x,y,w,d,c||'#bdb6aa') + rc(x,y,w,260,shade(c||'#bdb6aa',.8)) + rc(x+60,y+300,w-120,d-360,'#f6f3ee');
+    case 'pendantbar': return rc(x,y,w,d,'#7a5638');
+    case 'ceilround': return ec(0,0,w/2,d/2,'#fbf9f4') + ec(0,0,w*.42,d*.42,'none','stroke-dasharray="10 8"');
     case 'ranarp': return ec(0,0,w/2,d/2,'#1d1d1f') + ec(0,0,w*.3,d*.3,'#fff6dd');
     case 'domependant': return ec(0,0,w/2,d/2,'#f4f2ee') + ec(0,0,w*.36,d*.36,'none','stroke-dasharray="10 8"') + ec(0,0,w*.2,d*.2,'none','stroke-dasharray="10 8"') + `<circle r="${m*.04}" fill="#fff6dd" ${ST}/>`;
     case 'trubbrufse': return ec(0,0,w/2,d/2,'#f8f4ea',`stroke-dasharray="14 10" stroke-width="10"`) + ec(0,0,w*.12,d*.12,'#f6ecd9');
@@ -3525,6 +3528,32 @@ function buildFurniture(f){
       const scr = box(.14, .006, .09, screenMat('#2a4a6a'), w/2 - .09, .675, back + .85); scr.rotation.x = -.3; g.add(scr);
       break;
     }
+    case 'kbbed': {             // ニトリ 収納付きベッド KB：高床头柜式床头（翻盖格＋台面＋插座＋左右阅读灯）、侧面抽屉、すのこ
+      const fr = woodM(c || '#bdb6aa'), dk = woodM(darker(c || '#bdb6aa', .82)), hb = (f.hb ?? 910)/1000, hd = .26, fh = .3, mt = .22, top = fh + mt, md = d - hd - .02;
+      g.add(box(w - .1, .05, d - .1, '#3f3a34', 0, 0, .02), rbox(w, fh - .05, md, fr, 0, .05, bz + hd + md/2, .012));
+      for (const s of [-1, 1]) for (let i = 0; i < 2; i++) g.add(rbox(.003, .16, md*.42, dk, s*(w/2 + .001), .09, bz + hd + .06 + md*(.25 + i*.46), .002));
+      g.add(rbox(w, hb, hd, fr, 0, 0, bz + hd/2, .012), rbox(w - .04, .012, hd - .02, dk, 0, hb - .01, bz + hd/2, .004));
+      g.add(rbox(w*.62, .2, .01, dk, 0, hb - .3, bz + hd + .003, .004));
+      for (const s of [-1, 1]) { g.add(rbox(.12, .04, .05, mat('#2b2a28'), s*(w/2 - .18), hb - .08, bz + hd + .02, .01)); g.add(blob(.025, .012, .025, glowMat('#fff', '#ffdca8', 1.1), s*(w/2 - .18), hb - .1, bz + hd + .03, 10)); }
+      g.add(rbox(w - .06, mt, md - .02, '#f6f3ee', 0, fh, bz + hd + md/2, .07));
+      const dd = md*.66, dz = d/2 - .015 - dd/2, fab = fabric('#e9e4dc');
+      g.add(rbox(w + .02, .27, dd, fab, 0, top - .2, dz, .04), rbox(w + .024, .06, .22, fabric('#fbfaf7'), 0, top + .025, dz - dd/2 + .11, .025));
+      const pw = (w - .22)/2; for (let i = 0; i < 2; i++){ const x = -w/2 + .08 + pw/2 + i*(pw + .06); g.add(rot(rbox(pw, .15, .42, fabric('#ffffff'), x, top - .01, bz + hd + .26, .07), -.2)); }
+      break;
+    }
+    case 'pendantbar': {        // ニトリ 昇降式ペンダントバー YIYI25：120cm 木纹长条灯，上方黑色吸顶盒，两根吊线，下发光＋上间接光
+      const y = H - (f.drop ?? 980)/1000, bh = .07, wd = woodM(c || '#7a5638'), bk = mat('#1b1b1c', {roughness:.5});
+      g.add(rbox(.3, .06, .1, bk, 0, H - .06, 0, .01));
+      for (const s of [-1, 1]) g.add(rod([s*.12, H - .06, 0], [s*w*.4, y + bh, 0], .0015, mat('#cfcfcf')));
+      g.add(rbox(w, bh, d < .03 ? .016 : d, wd, 0, y, 0, .004));
+      g.add(box(w - .02, .004, (d < .03 ? .016 : d) - .004, glowMat('#fffaf0', '#ffe4b8', 1.2), 0, y - .002, 0), box(w*.9, .003, .008, glowMat('#fff', '#ffcf8a', .8), 0, y + bh, 0));
+      break;
+    }
+    case 'ceilround': {         // ニトリ 6畳用 LED シーリングライト YP001：乳白圆盘＋浅木纹边框
+      const r = w/2, y = H - (f.h ?? 110)/1000;
+      g.add(cyl(r*.97, r, .09, glowMat('#fbf9f4', '#fff0d8', .8), 0, y, 0, 48), cyl(r, r, .03, woodM(c || '#c9a67a'), 0, y + .08, 0, 48));
+      break;
+    }
     case 'ranarp': {            // IKEA RANARP 黑色金属吊灯 Φ23：小半球灯罩＋黄铜色灯头，定向照台面
       const r = w/2, hh = .16, y = H - (f.drop ?? 800)/1000, bk = mat(c || '#1d1d1f', {roughness:.45, metalness:.4, side:THREE.DoubleSide}), br = mat('#b08d57', {roughness:.35, metalness:.8});
       g.add(rod([0, H, 0], [0, y + hh + .06, 0], .003, mat('#2b2b2d')), cyl(.045, .045, .02, bk, 0, H - .02, 0, 16), cyl(.022, .022, .06, br, 0, y + hh, 0, 14));
@@ -3771,7 +3800,7 @@ function buildArch(){
 function buildFurn(){
   clearGroup(furnG);
   // 剖切墙时不显示吊灯、梁、纱帘、挂画这些高处的东西，免得悬在半空
-  const HIGH = ['ranarp', 'domependant', 'trubbrufse', 'sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
+  const HIGH = ['pendantbar', 'ceilround', 'ranarp', 'domependant', 'trubbrufse', 'sinnerlig', 'tray', 'pendant', 'fan', 'fan4', 'beam', 'curtain', 'drape', 'art', 'globe', 'drum', 'awning', 'ceilpanel', 'paperlamp'];
   state.furniture.forEach(f => { if (opt.cut < H - .01 && HIGH.includes(f.type)) return; furnG.add(buildFurniture(f)); });
   furnG.visible = opt.furn; selKey = null; applyGrow();
 }
