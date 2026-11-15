@@ -2126,14 +2126,16 @@ const weaveBambooMat = () => { if (_cvM.bamboo) return _cvM.bamboo; const m = cv
   for (const dir of [1, -1]) for (let i = -n; i < 2*n; i++){ g.strokeStyle = `rgb(${200 + R()*30|0},${150 + R()*25|0},${90 + R()*20|0})`; g.lineWidth = st*.42; g.beginPath(); g.moveTo(i*st, 0); g.lineTo(i*st + dir*Hh, Hh); g.stroke(); }
 }, {rough:.8, side:THREE.DoubleSide}); m.transparent = true; m.alphaTest = .3; m.emissive = new THREE.Color('#ffd9a0'); m.emissiveMap = m.map; m.emissiveIntensity = .55; return m; };
 // なぐり加工 木纹：沿长边一排排浅凿痕（波纹）＋木纹，1024px = 1m × 0.5m
-const naguriMat = c => cvMat('naguri' + c, 1024, 512, (g, W, Hh, R) => {
-  const b = new THREE.Color(c), col = k => `rgb(${Math.min(255, b.r*255*k)|0},${Math.min(255, b.g*255*k)|0},${Math.min(255, b.b*255*k)|0})`;
+const naguriMat = c => cvMat('naguri2' + c, 1024, 512, (g, W, Hh, R) => {     // なぐり加工：顺纹细木纹 + 交错排列的浅椭圆凿痕（低对比）
+  const b = new THREE.Color(c), col = (k, a = 1) => `rgba(${Math.min(255, b.r*255*k)|0},${Math.min(255, b.g*255*k)|0},${Math.min(255, b.b*255*k)|0},${a})`;
   g.fillStyle = col(1); g.fillRect(0, 0, W, Hh);
-  for (let k = 0; k < 120; k++){ g.strokeStyle = col(.78 + R()*.3); g.lineWidth = .8 + R()*2; g.beginPath(); let y = R()*Hh; g.moveTo(0, y); for (let x = 0; x <= W; x += 32){ y += (R() - .5)*3; g.lineTo(x, y); } g.stroke(); }
-  const rows = 9, rh = Hh/rows;
-  for (let r = 0; r < rows; r++){ let x = -R()*60; while (x < W){ const L = 50 + R()*40, gr = g.createLinearGradient(x, 0, x + L, 0);
-    gr.addColorStop(0, 'rgba(0,0,0,.16)'); gr.addColorStop(.35, 'rgba(255,255,255,.05)'); gr.addColorStop(1, 'rgba(0,0,0,.02)'); g.fillStyle = gr; g.fillRect(x, r*rh, L, rh); x += L; } }
-}, {rough:.6, bump:.8, glow:.12});
+  for (let k = 0; k < 260; k++){ g.strokeStyle = col(.8 + R()*.32, .35 + R()*.4); g.lineWidth = .5 + R()*1.4; g.beginPath(); let y = R()*Hh; g.moveTo(0, y); for (let x = 0; x <= W; x += 24){ y += (R() - .5)*1.6; g.lineTo(x, y); } g.stroke(); }
+  for (let k = 0; k < 6; k++){ const cx = R()*W, cy = R()*Hh; for (let r = 4; r < 40; r += 5){ g.strokeStyle = col(.82, .25); g.lineWidth = 1; g.beginPath(); g.ellipse(cx, cy, r*3.2, r*.55, 0, 0, 7); g.stroke(); } }
+  const rows = 14, rh = Hh/rows;
+  for (let r = 0; r < rows; r++){ let x = -R()*80 - (r % 2)*40; while (x < W){ const L = 70 + R()*50, cy = r*rh + rh/2 + (R() - .5)*4;
+    const gr = g.createLinearGradient(0, cy - rh*.6, 0, cy + rh*.6); gr.addColorStop(0, 'rgba(255,240,220,.05)'); gr.addColorStop(.45, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.06)');
+    g.fillStyle = gr; g.beginPath(); g.ellipse(x + L/2, cy, L/2, rh*.62, 0, 0, 7); g.fill(); x += L*(.8 + R()*.15); } }
+}, {rough:.55, bump:.5, glow:.1});
 // 卷帘帘片：一片 60mm（v 方向一个周期）
 const slatMat = c => cvMat('slat' + c, 16, 64, (g, W, Hh) => {
   const b = new THREE.Color(c), gr = g.createLinearGradient(0, 0, 0, Hh);
@@ -3035,20 +3037,30 @@ function buildFurniture(f){
       }
       break;
     }
-    case 'ot01table': {         // ニトリ なぐり加工ダイニングテーブル OT01 140（W140×D80×H72）：なぐり加工 木纹面（边缘波纹）＋ 4 根黑色钢管脚
-      const hh = (f.h ?? 720)/1000, t = .03, tm = naguriMat(c || '#6b4a33'), lm = mat(f.leg || '#2a2522', {roughness:.45, metalness:.5});
-      const top = rbox(w, t, d, tm, 0, hh - t, 0, .008); g.add(top);
-      const sh = uvPlane(w - .01, d - .01, tm, 1, .5); sh.rotation.x = -Math.PI/2; sh.position.y = hh + .0008; g.add(sh);
-      g.add(box(w - .2, .06, .02, lm, 0, hh - t - .06, d/2 - .06), box(w - .2, .06, .02, lm, 0, hh - t - .06, -d/2 + .06), box(.02, .06, d - .14, lm, w/2 - .08, hh - t - .06, 0), box(.02, .06, d - .14, lm, -w/2 + .08, hh - t - .06, 0));
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b2]) => g.add(box(.04, hh - t, .04, lm, a*(w/2 - .07), 0, b2*(d/2 - .07))));
+    case 'ot01table': {         // ニトリ なぐり加工ダイニングテーブル OT01 140（W140×D80×H72）：厚 4cm 一枚板风天板，四边なぐり波形边，细方钢黑脚
+      const hh = (f.h ?? 720)/1000, t = .04, tm = naguriMat(c || '#9b7b5c'), em = woodM(darker(c || '#7a5a3f', .82)), lm = mat(f.leg || '#1f1d1b', {roughness:.5, metalness:.45});
+      g.add(rbox(w - .03, t, d - .03, tm, 0, hh - t, 0, .004));
+      const sh = uvPlane(w - .035, d - .035, tm, 1, .5); sh.rotation.x = -Math.PI/2; sh.position.y = hh + .0008; g.add(sh);
+      const R = rng(1401), edge = (len, n, place) => { const sl = len/n; for (let i = 0; i < n; i++){ const k = .006 + R()*.01, m = rbox(sl + .004, t - .003 - R()*.003, k + .012, tm, 0, 0, 0, .006); place(m, -len/2 + sl*(i + .5), k); m.rotation.y += (R() - .5)*.08; g.add(m); } };
+      edge(w - .03, 22, (m, x) => { m.position.set(x, hh - t + .002, d/2 - .021); }); edge(w - .03, 22, (m, x) => { m.position.set(x, hh - t + .002, -d/2 + .021); });
+      edge(d - .03, 13, (m, z) => { m.position.set(w/2 - .021, hh - t + .002, z); m.rotation.y = Math.PI/2; }); edge(d - .03, 13, (m, z) => { m.position.set(-w/2 + .021, hh - t + .002, z); m.rotation.y = Math.PI/2; });
+      const ap = .05, ax = w/2 - .1, az = d/2 - .1;
+      g.add(box(2*ax, ap, .018, lm, 0, hh - t - ap, az), box(2*ax, ap, .018, lm, 0, hh - t - ap, -az), box(.018, ap, 2*az, lm, ax, hh - t - ap, 0), box(.018, ap, 2*az, lm, -ax, hh - t - ap, 0));
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a2, b2]) => { g.add(box(.035, hh - t, .035, lm, a2*ax, 0, b2*az), box(.04, .008, .04, mat('#111'), a2*ax, 0, b2*az)); });
       break;
     }
-    case 'ot01chair': {         // 同系列 半扶手椅（W53×D53×H73）：木纹扶手框 + 麂皮绒感软包椅背／座面；正面朝 +z
-      const wm = naguriMat(f.frame || '#6b4a33'), um = fabric(c || '#b8ab98'), lm = mat(f.leg || '#2a2522', {roughness:.45, metalness:.5}), sy = .44;
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b2]) => g.add(box(.03, sy - .06, .03, lm, a*(w/2 - .05), 0, b2*(d/2 - .06))));
-      g.add(box(w - .06, .04, d - .06, lm, 0, sy - .1, 0), rbox(w - .07, .08, d - .1, um, 0, sy - .07, .02, .03));
-      const bk = rbox(w - .06, .3, .07, um, 0, sy + .02, -d/2 + .07, .03); bk.rotation.x = -.12; g.add(bk);
-      [-1, 1].forEach(a => { g.add(rbox(.045, .03, d*.6, wm, a*(w/2 - .03), .66, -d*.1, .01), box(.03, .66 - sy + .06, .03, lm, a*(w/2 - .04), sy - .06, d*.12)); });
+    case 'ot01chair': {         // 同系列 半扶手椅（W53×D53×H73）：弧形软包椅背＋厚坐垫（麂皮绒感），木扶手短，细黑钢脚略外撇；正面朝 +z
+      const wm = woodM(f.frame || '#7a5a3f'), um = weaveMat ? weaveMat(c || '#b8ab98') : fabric(c || '#b8ab98'), dk = fabric(darker(c || '#b8ab98', .78)), lm = mat(f.leg || '#1f1d1b', {roughness:.5, metalness:.45}), sy = .45, bt = .73;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a2, b2]) => g.add(rod([a2*(w/2 - .04), 0, b2*(d/2 - .045)], [a2*(w/2 - .08), sy - .09, b2*(d/2 - .1)], .011, lm, .014, 10)));
+      g.add(box(w - .14, .025, d - .16, lm, 0, sy - .11, 0));
+      g.add(rbox(w - .06, .1, d - .1, um, 0, sy - .09, .03, .035), box(w - .1, .006, d - .14, dk, 0, sy - .045, .03));
+      const R0 = .42, ang = 1.05, bh = bt - sy + .01, cz = -d/2 + .07 + R0, s0 = Math.PI - ang/2, side = um.clone(); side.side = THREE.DoubleSide;
+      const shell = (r) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, bh, 28, 1, true, s0, ang), side); m.position.set(0, sy - .02 + bh/2, cz); m.castShadow = true; return m; };
+      g.add(shell(R0), shell(R0 + .055));
+      const cap = new THREE.Mesh(new THREE.TorusGeometry(R0 + .0275, .028, 10, 28, ang), um); cap.rotation.x = Math.PI/2; cap.rotation.z = Math.PI/2 - ang/2 + Math.PI; cap.position.set(0, sy - .02 + bh, cz); g.add(cap);
+      [-1, 1].forEach(a2 => { const th = a2*ang/2, e = new THREE.Mesh(new THREE.CylinderGeometry(.028, .028, bh, 10), um); e.position.set(Math.sin(th)*(R0 + .0275), sy - .02 + bh/2, cz - Math.cos(th)*(R0 + .0275)); g.add(e); });
+      [-1, 1].forEach(a2 => { const x = a2*(w/2 - .035);
+        g.add(rbox(.045, .028, .3, wm, x, .64, -d/2 + .26, .012), rod([x, sy - .04, -d/2 + .36], [x, .64, -d/2 + .36], .009, lm)); });
       break;
     }
     case 'sinnerlig': {         // IKEA SINNERLIG 竹编吊灯：上小筒 + 中间鼓形 + 下筒 三段，黑色吊线和天花罩
