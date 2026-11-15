@@ -1809,6 +1809,7 @@ const opt = {cut:H, furn:true, labels:true, night:false, hour:10, mode:'orbit'};
 
 let inited = false, active = false, raf = 0, anim = null, fly = null;
 let renderer, labelRenderer, scene, camera, orbit, walkCtl, hemi, sun, ground, glassMat, wallMat, capMat, frameMat;
+const ceilMats = [];
 let archFloor, archUp, furnG, labelG, lampG, colliders = [], selKey = null, selHelper = null;
 let sigArch = '', sigFurn = '', sigLabels = '', grow = 1, furnGrow = 1;
 const doors = [], keys = {};
@@ -3423,6 +3424,7 @@ function buildFurniture(f){
     }
     case 'tray': {              // 折り上げ天井：天花开洞（buildArch 里扣掉），往上凹 f.dep，凹槽里横 f.beams 根化妆梁（沿宽度方向）
       const D = (f.dep ?? 120)/1000, sc = PLAN.style?.ceiling || '#fbfaf7', cm = mat(sc, {roughness:1, emissive:sc, emissiveIntensity:.3, side:THREE.DoubleSide}), sm = mat(darker(sc, .9), {roughness:1, emissive:sc, emissiveIntensity:.08});
+      cm.userData.em0 = .3; sm.userData.em0 = .08; ceilMats.push(cm, sm); if (opt.night) cm.emissiveIntensity = sm.emissiveIntensity = 0;
       const tp = new THREE.Mesh(new THREE.PlaneGeometry(w, d), cm); tp.rotation.x = Math.PI/2; tp.position.y = H + D; g.add(tp);
       [[w + .024, .012, 0, -d/2 - .006], [w + .024, .012, 0, d/2 + .006], [.012, d, -w/2 - .006, 0], [.012, d, w/2 + .006, 0]].forEach(([a, b, x, z]) => { const o = box(a, D, b, sm, x, H, z); o.castShadow = false; g.add(o); });
       [[w + .05, .025, 0, -d/2 - .012], [w + .05, .025, 0, d/2 + .012], [.025, d + .05, -w/2 - .012, 0], [.025, d + .05, w/2 + .012, 0]].forEach(([a, b, x, z]) => { const o = box(a, .012, b, mat(sc, {roughness:.9}), x, H - .012, z); o.castShadow = false; g.add(o); });   // 凹槽口一圈细边线
@@ -3557,6 +3559,9 @@ function buildFurniture(f){
       for (const s of [-1, 1]) g.add(rod([s*.12, H - .06, 0], [s*w*.4, y + bh, 0], .0015, mat('#cfcfcf')));
       g.add(rbox(w, bh, d < .03 ? .016 : d, wd, 0, y, 0, .004));
       g.add(box(w - .02, .004, (d < .03 ? .016 : d) - .004, glowMat('#fffaf0', '#ffe4b8', 1.2), 0, y - .002, 0), box(w*.9, .003, .008, glowMat('#fff', '#ffcf8a', .8), 0, y + bh, 0));
+      const dl = new THREE.SpotLight(0xffe2bd, 0, 5, 1.15, .85, 1.5); dl.userData.lux = 9; dl.position.set(0, y - .01, 0); dl.target.position.set(0, 0, 0); g.add(dl, dl.target);      // 主照明（下照 2507lm，夜景按电球色）
+      const ul = new THREE.PointLight(0xffc98a, 0, 1.8, 1.6); ul.userData.lux = 2.6; ul.position.set(0, y + bh + .12, 0); g.add(ul);                                                    // 间接照明（上照 350lm 电球色）
+      if (opt.night) { dl.intensity = 9; ul.intensity = 2.6; }
       break;
     }
     case 'ceilround': {         // ニトリ 6畳用 LED シーリングライト YP001：乳白圆盘＋浅木纹边框
@@ -3723,7 +3728,8 @@ function buildArch(){
     const cg = new THREE.ShapeGeometry(cs); cg.rotateX(Math.PI/2);
     if (r.outdoor) return;                         // 户外：只铺地面，不加天花和顶灯
     { const sg = new THREE.ExtrudeGeometry(shapeOf(r.poly), {depth:.12, bevelEnabled:false}); sg.rotateX(-Math.PI/2); const so = new THREE.Mesh(sg, shadowMat); so.position.y = H + .005; shadowOnly(so); }   // 天花遮光
-    const ceil = new THREE.Mesh(cg, mat(PLAN.style?.ceiling || '#fbfaf7', PLAN.style ? {roughness:1, emissive:PLAN.style.ceiling, emissiveIntensity:.32} : {roughness:1})); ceil.position.y = H; ceil.visible = top >= H; archUp.add(ceil);
+    const cMat = mat(PLAN.style?.ceiling || '#fbfaf7', PLAN.style ? {roughness:1, emissive:PLAN.style.ceiling, emissiveIntensity:.32} : {roughness:1}); if (PLAN.style){ cMat.userData.em0 = .32; ceilMats.push(cMat); cMat.emissiveIntensity = opt.night ? 0 : .32; }
+    const ceil = new THREE.Mesh(cg, cMat); ceil.position.y = H; ceil.visible = top >= H; archUp.add(ceil);
     if (r.at){
       const lamp = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .02, 32), new THREE.MeshStandardMaterial({color:'#fff', emissive:'#fff2d6', emissiveIntensity:.3}));
       const tIn = trays.find(t => pip(r.at[0], r.at[1], trayCorners(t)));   // 顶灯落在折上天井里：贴凹槽顶
@@ -3866,6 +3872,9 @@ function applyLight(){
   scene.background = new THREE.Color(opt.night ? 0x1c2130 : 0xf7f4ee);
   ground.material.color.set(opt.night ? 0x2a2e38 : 0xf2eee7);
   lampG.children.forEach(o => { if (o.isPointLight) o.intensity = opt.night ? 6 : 0; else o.material.emissiveIntensity = opt.night ? 2 : .3; });
+  ceilMats.forEach(m => m.emissiveIntensity = opt.night ? 0 : m.userData.em0);          // 天花的“补光自发光”夜里关掉，和墙面同一受光，不再一亮一暗
+  furnG.traverse(o => { if (o.isLight && o.userData.lux != null) o.intensity = opt.night ? o.userData.lux : 0;
+    if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m?.userData?.glow){ if (m.userData.k0 == null) m.userData.k0 = m.emissiveIntensity; m.emissiveIntensity = m.userData.k0*(opt.night ? 2.2 : 1); } }); });
   renderer.toneMappingExposure = opt.night ? 1.25 : 1.05;
   envK = opt.night ? .15 : 1; matCache.forEach(m => { if (m.envMap) m.envMapIntensity = m.userData.env*envK; });
   const h = Math.floor(opt.hour), m = Math.round((opt.hour - h)*60);
